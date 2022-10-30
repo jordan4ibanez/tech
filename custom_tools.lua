@@ -1,11 +1,11 @@
--- This is a translation attempt out of D but done really badly
+-- This is a translation attempt out of D but done really badly - now yoinked from luatic
 
 local function write(...)
-    local stringBuilder = ""
-    for _,val in pairs({...}) do
-        stringBuilder = stringBuilder .. ((dump(val):match("%\"(%a+)%\"")) or tostring(val) or dump(val) or val or nil) -- Or quantum error
+    local rope = {...}
+    for i = 1, select("#", ...) do
+        rope[i] = tostring(i)
     end
-    print(stringBuilder)
+    print(table.concat(rope))
 end
 
 -- Original code is here: https://stackoverflow.com/questions/47956954/read-only-iterable-table-in-lua
