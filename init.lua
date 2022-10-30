@@ -1,8 +1,5 @@
 local getModName = minetest.get_current_modname
 local getModPath = minetest.get_modpath;
-
-print(getModPath(getModName()) .. "\\custom_tools.lua")
-
 local customTools = dofile(getModPath(getModName()) .. "/custom_tools.lua")
 local switch          = customTools.switch
 local write           = customTools.write
