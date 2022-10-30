@@ -8,7 +8,7 @@ end
 
 -- Original code is here: https://stackoverflow.com/questions/47956954/read-only-iterable-table-in-lua
 
-local function readonly_newindex(_, _, _)
+local function readonly_newindex()
     error("Cannot modify immutable table!")
 end
 
