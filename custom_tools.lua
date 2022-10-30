@@ -67,6 +67,15 @@ function switch:match(case, ...)
     return nil
 end
 
+-- I wrote this because I am lazy
+local function buildString(...)
+    local stringBuilder = ""
+    for _,word in ipairs(...) do
+        stringBuilder = stringBuilder .. word
+    end
+    return stringBuilder
+end
+
 -- There are two ways to do this: _, _, _ or {_, _, _}. I like the second one better
 return {
     switch          = switch,
