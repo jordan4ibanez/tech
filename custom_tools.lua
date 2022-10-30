@@ -1,3 +1,5 @@
+-- This is a translation attempt out of D but done really badly
+
 local function write(...)
     local stringBuilder = ""
     for _,val in pairs({...}) do
@@ -46,6 +48,7 @@ local function immutable(t)
     return proxy
 end
 
+-- A lua switch statement
 
 local switch = {}
 
