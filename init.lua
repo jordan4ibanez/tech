@@ -11,20 +11,26 @@ local buildString     = customTools.buildString
 --! No animation because that's not implemented into Minetest
 
 local beltSpeeds = immutable({1,2,3})
-local beltAngles = immutable({0,45,-45})
+local beltAngles = immutable({0,45})
 
 for _,beltSpeed in immutableIpairs(beltSpeeds) do
 for _,beltAngle in immutableIpairs(beltAngles) do
+
     local definition = {
-        paramtype = "light",
+        paramtype  = "light",
         paramtype2 = "4dir",
+
+        drawtype   = "mesh",
+        mesh = buildString("belt_", tostring(beltAngle), ".b3d"),
+        
+        tiles = { buildString("belt_",beltSpeed,".png") },
+
+        visual_scale = 0.5
     }
-    write(buildString(
-        "tech:belt_", tostring(beltAngle):gsub("%-", "negative_"), "_", beltSpeed
-    ))
+
     minetest.register_node(
         buildString(
-            "tech:belt_", tostring(beltAngle):gsub("%-", "negative_"), "_", beltSpeed
+            "tech:belt_", beltAngle, "_", beltSpeed
         ),
         definition
     );
