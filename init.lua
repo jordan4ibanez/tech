@@ -18,11 +18,13 @@ for _,beltAngle in immutableIpairs(beltAngles) do
     local definition = {
         paramtype = "light",
         paramtype2 = "4dir",
-
     }
+    write(buildString(
+        "tech:belt_", tostring(beltAngle):gsub("%-", "negative_"), "_", beltSpeed
+    ))
     minetest.register_node(
         buildString(
-            "tech:belt_", beltAngle, "_", beltSpeed
+            "tech:belt_", tostring(beltAngle):gsub("%-", "negative_"), "_", beltSpeed
         ),
         definition
     );
