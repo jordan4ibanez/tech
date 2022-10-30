@@ -3,7 +3,7 @@
 local function write(...)
     local rope = {...}
     for i = 1, select("#", ...) do
-        rope[i] = tostring(i)
+        rope[i] = tostring(rope[i])
     end
     print(table.concat(rope))
 end
