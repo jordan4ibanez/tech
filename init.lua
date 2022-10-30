@@ -1,16 +1,21 @@
-local getModName = minetest.get_current_modname
-local getModPath = minetest.get_modpath;
+local getModName           = minetest.get_current_modname
+local getModPath           = minetest.get_modpath;
 -- Jordan4ibanez functions
 local customTools = dofile(getModPath(getModName()) .. "/custom_tools.lua")
-local switch          = customTools.switch
-local write           = customTools.write
-local immutable       = customTools.immutable
-local immutableIpairs = customTools.immutableIpairs
-local immutablePairs  = customTools.immutablePairs
-local buildString     = customTools.buildString
+local switch               = customTools.switch
+local write                = customTools.write
+local immutable            = customTools.immutable
+local immutableIpairs      = customTools.immutableIpairs
+local immutablePairs       = customTools.immutablePairs
+local buildString          = customTools.buildString
 -- Minetest functions
-local setNode         = minetest.set_node
-local onLoaded        = minetest.register_on_mods_loaded
+local registerNode         = minetest.register_node
+local setNode              = minetest.set_node
+local onLoaded             = minetest.register_on_mods_loaded
+local registerEntity       = minetest.register_entity
+local registeredNodes      = minetest.registered_nodes
+local registeredItems      = minetest.registered_items --? Why are these two different?
+local registeredCraftItems = minetest.registered_craftitems
 
 
 -- This is pulled from master branch
@@ -62,7 +67,7 @@ for _,beltAngle in immutableIpairs(beltAngles) do
             setNode(pointedThing.above, {name = nameString, param2 = fourDir})
         end
     }
-    minetest.register_node(
+    registerNode(
         nameString,
         definition
     );
@@ -71,9 +76,21 @@ end
 
 
 --! Must run after mods are loaded, entities are dynamic anyways
+-- This is the entity that is "pushed" along the belt
+
+local nodeList
+local itemList
+local craftItemList
 
 onLoaded(
     function()
-        write("wow", "they","all","loaded")
+        -- These should absolutely never change
+        nodeList      = immutable(registeredNodes)
+        itemList      = immutable(registeredItems)
+        craftItemList = immutable(registeredCraftItems)
+
+        -- Todo: Make this do a thing!
+
+        registerEntity("beltItem")
     end
 )
