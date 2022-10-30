@@ -16,15 +16,18 @@ local buildString     = customTools.buildString
 local beltSpeeds = immutable({1,2,3})
 local beltAngles = immutable({0,45,-45})
 
--- for _,beltSpeed in immutableIpairs(beltSpeeds) do
+for _,beltSpeed in immutableIpairs(beltSpeeds) do
 for _,beltAngle in immutableIpairs(beltAngles) do
     local definition = {
         paramtype = "light",
         paramtype2 = "4dir",
 
     }
-    -- minetest.register_node(, definition);
-
-    write(buildString("tech:belt_"--[[layer]], beltAngle))
+    minetest.register_node(
+        buildString(
+            "tech:belt_", beltAngle, "_", beltSpeed
+        ),
+        definition
+    );
 end
--- end
+end
