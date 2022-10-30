@@ -88,9 +88,16 @@ onLoaded(
         nodeList      = immutable(registeredNodes)
         itemList      = immutable(registeredItems)
         craftItemList = immutable(registeredCraftItems)
-
-        -- Todo: Make this do a thing!
-
-        registerEntity("beltItem")
     end
 )
+
+local beltItem = {
+
+}
+
+function beltItem:on_step(delta)
+    write("I am a potato! Delta time: ", delta)
+end
+
+-- Todo: Make this do a thing!
+registerEntity("tech:beltItem", beltItem)
