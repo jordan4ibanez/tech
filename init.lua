@@ -10,6 +10,7 @@ local immutablePairs  = customTools.immutablePairs
 local buildString     = customTools.buildString
 -- Minetest functions
 local setNode         = minetest.set_node
+local onLoaded        = minetest.register_on_mods_loaded
 
 
 -- This is pulled from master branch
@@ -67,3 +68,12 @@ for _,beltAngle in immutableIpairs(beltAngles) do
     );
 end
 end
+
+
+--! Must run after mods are loaded, entities are dynamic anyways
+
+onLoaded(
+    function()
+        write("wow", "they","all","loaded")
+    end
+)
