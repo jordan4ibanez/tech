@@ -64,14 +64,29 @@ function switch:match(case, ...)
     if self.case_table[case] then
         return self.case_table[case](...)
     end
+    -- There's your fancy D default
+    if self.case_table.default then
+        return self.case_table.default(...)
+    end
     return nil
 end
 
--- I wrote this because I am lazy
+
+-- I wrote this because I am very lazy
+
+local stringSwitch = switch:new({
+    string = function(stringBuilder, input)
+        return stringBuilder .. input
+    end,
+    default = function(stringBuilder, input)
+        return stringBuilder .. tostring(input)
+    end
+})
+
 local function buildString(...)
     local stringBuilder = ""
-    for _,word in ipairs(...) do
-        stringBuilder = stringBuilder .. word
+    for _,word in ipairs({...}) do
+        stringBuilder = stringSwitch:match(type(word), stringBuilder, word)
     end
     return stringBuilder
 end
@@ -83,4 +98,5 @@ return {
     immutable       = immutable,
     immutableIpairs = immutableIpairs,
     immutablePairs  = immutablePairs,
+    buildString     = buildString
 }
