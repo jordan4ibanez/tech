@@ -45,8 +45,13 @@ for _,beltAngle in immutableIpairs(beltAngles) do
         paramtype2 = "facedir",
         drawtype   = "mesh",
         mesh = buildString("belt_", beltAngle, ".b3d"),
-        tiles = { buildString("belt_",beltSpeed,".png") },
+        tiles = {
+            buildString("belt_",beltSpeed,".png")
+        },
         visual_scale = 0.5,
+        groups = {
+            dig_immediate = 3
+        },
         after_place_node = function(_, placer, _, pointedThing)
             local lookDir = placer:get_look_dir()
             local fourDir = convertDir(dirToFourDir(lookDir))
