@@ -94,6 +94,28 @@ local function buildString(...)
     return stringBuilder
 end
 
+-- This is pulled from master branch - Modified because I felt like it
+local dirSwitchX = switch:new({
+    [true]  = function() return 3 end,
+    [false] = function() return 1 end
+})
+local dirSwitchZ = switch:new({
+    [true]  = function() return 2 end,
+    [false] = function() return 0 end
+})
+local dirMasterSwitch = switch:new({
+    [true]  = function(dir) return dirSwitchX:match(dir.x < 0) end,
+    [false] = function(dir) return dirSwitchZ:match(dir.z < 0) end
+})
+local function dirToFourDir(dir)
+    return dirMasterSwitch:match(math.abs(dir.x) > math.abs(dir.z), dir)
+end
+-- Makes the belt face the direction the player expects
+local function convertDir(inputDir)
+    return (inputDir + 2) % 4
+end
+
+
 -- There are two ways to do this: _, _, _ or {_, _, _}. I like the second one better
 return {
     switch          = switch,
