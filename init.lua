@@ -23,15 +23,17 @@ local registeredCraftItems = minetest.registered_craftitems
 
 --! No animation because that's not implemented into Minetest
 
-local beltSpeeds = immutable({1,2,3})
-local beltAngles = immutable({0,45})
+local beltSpeeds = immutable({ 1, 2, 3})
+local beltAngles = immutable({-45, 0, 45})
 local beltSwitch = {}
 
 for _,beltSpeed in immutableIpairs(beltSpeeds) do
 for _,beltAngle in immutableIpairs(beltAngles) do
 
+    local angleConversion = tostring(beltAngle):gsub("-", "negative_")
+
     local nameString = buildString(
-        "tech:belt_", beltAngle, "_", beltSpeed
+        "tech:belt_", angleConversion, "_", beltSpeed
     )
 
     -- Automate data extraction during runtime
@@ -44,7 +46,7 @@ for _,beltAngle in immutableIpairs(beltAngles) do
         paramtype  = "light",
         paramtype2 = "facedir",
         drawtype   = "mesh",
-        mesh = buildString("belt_", beltAngle, ".b3d"),
+        mesh = buildString("belt_", angleConversion, ".b3d"),
         tiles = {
             buildString("belt_",beltSpeed,".png")
         },
