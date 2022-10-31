@@ -8,6 +8,8 @@ local immutable            = customTools.immutable
 local immutableIpairs      = customTools.immutableIpairs
 local immutablePairs       = customTools.immutablePairs
 local buildString          = customTools.buildString
+local dirToFourDir         = customTools.dirToFourDir
+local convertDir           = customTools.convertDir
 -- Minetest functions
 local registerNode         = minetest.register_node
 local getNode              = minetest.get_node
@@ -17,29 +19,6 @@ local registerEntity       = minetest.register_entity
 local registeredNodes      = minetest.registered_nodes
 local registeredItems      = minetest.registered_items --? Why are these two different?
 local registeredCraftItems = minetest.registered_craftitems
-
-
--- This is pulled from master branch
-local function dir_to_fourdir(dir)
-	if math.abs(dir.x) > math.abs(dir.z) then
-		if dir.x < 0 then
-			return 3
-		else
-			return 1
-		end
-	else
-		if dir.z < 0 then
-			return 2
-		else
-			return 0
-		end
-	end
-end
-
--- Makes the belt face the direction the player expects
-local function convertDir(inputDir)
-    return (inputDir + 2) % 4
-end
 
 
 --! No animation because that's not implemented into Minetest
