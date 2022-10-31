@@ -34,7 +34,7 @@ for _,beltAngle in immutableIpairs(beltAngles) do
         "tech:belt_", beltAngle, "_", beltSpeed
     )
 
-    -- Automate conversion table
+    -- Automate data extraction during runtime
     beltSwitch[nameString] = function()
         return beltSpeed, beltAngle
     end
