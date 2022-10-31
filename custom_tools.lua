@@ -123,5 +123,7 @@ return {
     immutable       = immutable,
     immutableIpairs = immutableIpairs,
     immutablePairs  = immutablePairs,
-    buildString     = buildString
+    buildString     = buildString,
+    dirToFourDir    = dirToFourDir,
+    convertDir      = convertDir
 }
