@@ -25,7 +25,7 @@ local registeredCraftItems = minetest.registered_craftitems
 
 local beltSpeeds = immutable({1,2,3})
 local beltAngles = immutable({0,45})
-local beltConversions = {}
+local beltSwitch = {}
 
 for _,beltSpeed in immutableIpairs(beltSpeeds) do
 for _,beltAngle in immutableIpairs(beltAngles) do
@@ -35,10 +35,9 @@ for _,beltAngle in immutableIpairs(beltAngles) do
     )
 
     -- Automate conversion table
-    beltConversions[nameString] = {
-        beltSpeed = beltSpeed,
-        beltAngle = beltAngle
-    }
+    beltSwitch[nameString] = function()
+        return beltSpeed, beltAngle
+    end
 
     -- Todo: Make belts act like rails
     local definition = {
@@ -61,8 +60,8 @@ for _,beltAngle in immutableIpairs(beltAngles) do
 end
 end
 
--- Finalize
-beltConversions = immutable(beltConversions)
+-- Finalize from table into switch
+beltSwitch = switch:new(beltSwitch)
 
 
 --! Must run after mods are loaded, entities are dynamic anyways
@@ -124,12 +123,22 @@ local directionSwitch = switch:new({
 local function extractName(nodeIdentity)
     return nodeIdentity.name
 end
+local function extractDirection(nodeIdentity)
+    return nodeIdentity.param2
+end
 
 function beltItem:pollBelt(object)
     local position = self.flooredPosition
-    local beltName = extractName(getNode(position))
+    local nodeIdentity = getNode(position)
+    local beltName = extractName(nodeIdentity)
+    local beltDir  = extractDirection(nodeIdentity)
+    local beltSpeed, beltAngle = beltSwitch:match(beltName)
 
-    write(beltName)
+    if beltSpeed then
+        write(beltSpeed, " ", beltAngle, " ", beltDir)
+    else
+        write("I ain't on no belt")
+    end
 end
 
 function beltItem:on_step(delta)
