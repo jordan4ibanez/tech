@@ -81,6 +81,7 @@ onLoaded(
     end
 )
 
+--! Beginning of belt item object
 local beltItem = {
     flooredPosition = nil,
     oldPosition     = nil
@@ -92,28 +93,29 @@ local function adjustFloor(inputVec)
     return vector.add(inputVec, adjustment)
 end
 
--- 
+-- Get the floored position
 function beltItem:pollPosition(object)
     local flooredPosition = vector.floor(adjustFloor(object:get_pos()))
 
     if not self.flooredPosition or not vector.equals(self.flooredPosition, flooredPosition) then
         self.flooredPosition = flooredPosition
     end
-
 end
 
+-- When the object comes into existence
 function beltItem:on_activate(staticdata, dtime_s)
     self:pollPosition(self.object)
     self:saveStepMemory()
 end
 
+-- Save memory for the next server step
 function beltItem:saveStepMemory()
     if not self.oldPosition or not vector.equals(self.flooredPosition, self.oldPosition) then
         self.oldPosition = vector.copy(self.flooredPosition)
     end
 end
 
-
+-- This is a hack to make the things move on the belts for now
 local vec0 = immutable(vector.new( 0, 0,-1))
 local vec1 = immutable(vector.new(-1, 0, 0))
 local vec2 = immutable(vector.new( 0, 0, 1))
@@ -133,6 +135,7 @@ local directionSwitch = switch:new({
     end,
 })
 
+-- Very lazy functions
 local function extractName(nodeIdentity)
     return nodeIdentity.name
 end
@@ -157,11 +160,10 @@ end
 
 function beltItem:on_step(delta)
     local object = self.object
+    
     self:pollPosition(object)
 
     self:pollBelt(object)
-
-
     
     self:saveStepMemory()
 end
