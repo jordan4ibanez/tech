@@ -86,8 +86,15 @@ local beltItem = {
     oldPosition     = nil
 }
 
+-- Give the vector a correct-er position to floor
+local adjustment = immutable(vector.new(0.5,0.5,0.5))
+local function adjustFloor(inputVec)
+    return vector.add(inputVec, adjustment)
+end
+
+-- 
 function beltItem:pollPosition(object)
-    local flooredPosition = vector.floor(object:get_pos())
+    local flooredPosition = vector.floor(adjustFloor(object:get_pos()))
 
     if not self.flooredPosition or not vector.equals(self.flooredPosition, flooredPosition) then
         self.flooredPosition = flooredPosition
@@ -107,10 +114,10 @@ function beltItem:saveStepMemory(object)
 end
 
 
-local vec0 = vector.new( 0, 0,-1)
-local vec1 = vector.new(-1, 0, 0)
-local vec2 = vector.new( 0, 0, 1)
-local vec3 = vector.new( 1, 0, 0)
+local vec0 = immutable(vector.new( 0, 0,-1))
+local vec1 = immutable(vector.new(-1, 0, 0))
+local vec2 = immutable(vector.new( 0, 0, 1))
+local vec3 = immutable(vector.new( 1, 0, 0))
 local directionSwitch = switch:new({
     [0] = function(object)
         object:set_velocity(vec0)
