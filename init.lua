@@ -50,6 +50,7 @@ for _,beltAngle in immutableIpairs(beltAngles) do
         after_place_node = function(_, placer, _, pointedThing)
             local lookDir = placer:get_look_dir()
             local fourDir = convertDir(dirToFourDir(lookDir))
+            write(dirToFourDir(lookDir))
             setNode(pointedThing.above, {name = nameString, param2 = fourDir})
         end
     }
@@ -105,18 +106,23 @@ function beltItem:saveStepMemory(object)
     end
 end
 
+
+local vec0 = vector.new( 0, 0,-1)
+local vec1 = vector.new(-1, 0, 0)
+local vec2 = vector.new( 0, 0, 1)
+local vec3 = vector.new( 1, 0, 0)
 local directionSwitch = switch:new({
-    [0] = function()
-        write("Go 0")
+    [0] = function(object)
+        object:set_velocity(vec0)
     end,
-    [1] = function()
-        write("Go 1")
+    [1] = function(object)
+        object:set_velocity(vec1)
     end,
-    [2] = function()
-        write("Go 2")
+    [2] = function(object)
+        object:set_velocity(vec2)
     end,
-    [3] = function()
-        write("Go 3")
+    [3] = function(object)
+        object:set_velocity(vec3)
     end,
 })
 
@@ -136,6 +142,7 @@ function beltItem:pollBelt(object)
 
     if beltSpeed then
         write(beltSpeed, " ", beltAngle, " ", beltDir)
+        directionSwitch:match(beltDir, object)
     else
         write("I ain't on no belt")
     end
