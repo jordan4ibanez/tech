@@ -92,14 +92,30 @@ onLoaded(
 )
 
 local beltItem = {
-
+    flooredPosition = nil,
+    oldPosition     = nil
 }
 
-function beltItem:pollEnvironment()
-    if not self.oldPosition then
-        write("No old position")
+function beltItem:pollPosition(object)
+    local flooredPosition = vector.floor(object:get_pos())
+
+    if not self.flooredPosition or not vector.equals(self.flooredPosition, flooredPosition) then
+        self.flooredPosition = flooredPosition
+    end
+
+    self:saveStepMemory()
+end
+
+function beltItem:on_activate(staticdata, dtime_s)
+    self:pollPosition(self.object)
+end
+
+function beltItem:saveStepMemory(object)
+    if not self.oldPosition or not vector.equals(self.flooredPosition, self.oldPosition) then
+        self.oldPosition = vector.copy(self.flooredPosition)
     end
 end
+
 
 local directionSwitch = switch:new({
     [0] = function()
@@ -117,7 +133,11 @@ local directionSwitch = switch:new({
 })
 
 function beltItem:on_step(delta)
-    self:pollEnvironment()
+    local object = self.object
+
+    write(self.flooredPosition, " ", self.oldPosition)
+    
+    self:saveStepMemory(object)
 end
 
 -- Todo: Make this do a thing!
