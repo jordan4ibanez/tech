@@ -95,8 +95,29 @@ local beltItem = {
 
 }
 
+function beltItem:pollEnvironment()
+    if not self.oldPosition then
+        write("No old position")
+    end
+end
+
+local directionSwitch = switch:new({
+    [0] = function()
+        write("Go 0")
+    end,
+    [1] = function()
+        write("Go 1")
+    end,
+    [2] = function()
+        write("Go 2")
+    end,
+    [3] = function()
+        write("Go 3")
+    end,
+})
+
 function beltItem:on_step(delta)
-    write("I am a potato! Delta time: ", delta)
+    self:pollEnvironment()
 end
 
 -- Todo: Make this do a thing!
