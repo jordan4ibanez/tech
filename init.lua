@@ -100,14 +100,14 @@ function beltItem:pollPosition(object)
         self.flooredPosition = flooredPosition
     end
 
-    self:saveStepMemory()
 end
 
 function beltItem:on_activate(staticdata, dtime_s)
     self:pollPosition(self.object)
+    self:saveStepMemory()
 end
 
-function beltItem:saveStepMemory(object)
+function beltItem:saveStepMemory()
     if not self.oldPosition or not vector.equals(self.flooredPosition, self.oldPosition) then
         self.oldPosition = vector.copy(self.flooredPosition)
     end
@@ -163,7 +163,7 @@ function beltItem:on_step(delta)
 
 
     
-    self:saveStepMemory(object)
+    self:saveStepMemory()
 end
 
 -- Todo: Make this do a thing!
