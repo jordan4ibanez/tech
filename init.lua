@@ -10,6 +10,7 @@ local immutablePairs       = customTools.immutablePairs
 local buildString          = customTools.buildString
 -- Minetest functions
 local registerNode         = minetest.register_node
+local getNode              = minetest.get_node
 local setNode              = minetest.set_node
 local onLoaded             = minetest.register_on_mods_loaded
 local registerEntity       = minetest.register_entity
@@ -45,6 +46,7 @@ end
 
 local beltSpeeds = immutable({1,2,3})
 local beltAngles = immutable({0,45})
+local beltConversions = {}
 
 for _,beltSpeed in immutableIpairs(beltSpeeds) do
 for _,beltAngle in immutableIpairs(beltAngles) do
@@ -52,6 +54,12 @@ for _,beltAngle in immutableIpairs(beltAngles) do
     local nameString = buildString(
         "tech:belt_", beltAngle, "_", beltSpeed
     )
+
+    -- Automate conversion table
+    beltConversions[nameString] = {
+        beltSpeed = beltSpeed,
+        beltAngle = beltAngle
+    }
 
     -- Todo: Make belts act like rails
     local definition = {
@@ -73,6 +81,9 @@ for _,beltAngle in immutableIpairs(beltAngles) do
     );
 end
 end
+
+-- Finalize
+beltConversions = immutable(beltConversions)
 
 
 --! Must run after mods are loaded, entities are dynamic anyways
@@ -116,7 +127,6 @@ function beltItem:saveStepMemory(object)
     end
 end
 
-
 local directionSwitch = switch:new({
     [0] = function()
         write("Go 0")
@@ -132,10 +142,24 @@ local directionSwitch = switch:new({
     end,
 })
 
+local function extractName(nodeIdentity)
+    return nodeIdentity.name
+end
+
+function beltItem:pollBelt(object)
+    local position = self.flooredPosition
+    local beltName = extractName(getNode(position))
+
+    write(beltName)
+end
+
 function beltItem:on_step(delta)
     local object = self.object
+    self:pollPosition(object)
 
-    write(self.flooredPosition, " ", self.oldPosition)
+    self:pollBelt(object)
+
+
     
     self:saveStepMemory(object)
 end
