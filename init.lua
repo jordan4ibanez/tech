@@ -50,7 +50,7 @@ for _,beltAngle in immutableIpairs(beltAngles) do
         visual_scale = 0.5,
         after_place_node = function(_, placer, _, pointedThing)
             local lookDir = placer:get_look_dir()
-            local fourDir = convertDir(dir_to_fourdir(lookDir))
+            local fourDir = convertDir(dirToFourDir(lookDir))
             setNode(pointedThing.above, {name = nameString, param2 = fourDir})
         end
     }
