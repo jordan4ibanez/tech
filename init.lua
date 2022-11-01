@@ -16,6 +16,7 @@ local getNode              = minetest.get_node
 local setNode              = minetest.set_node
 local onLoaded             = minetest.register_on_mods_loaded
 local addEntity            = minetest.add_entity
+local addItem              = minetest.add_item
 local registerEntity       = minetest.register_entity
 local registerCraftItem    = minetest.register_craftitem
 local registeredNodes      = minetest.registered_nodes
@@ -220,7 +221,6 @@ function inserter:productionProcedure()
 end
 
 
-
 --! Minetest internal functions for entity object
 
 function inserter:on_activate()
@@ -236,8 +236,22 @@ function inserter:on_step(delta)
     self:productionProcedure()
 end
 
+function inserter:on_punch()
+    addItem(self.position, "tech:inserter")
+    self.object:remove()
+end
+
 
 registerEntity("tech:inserter", inserter)
+
+
+
+
+
+
+
+
+
 
 
 --! Beginning of the inserter item
