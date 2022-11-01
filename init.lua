@@ -20,6 +20,7 @@ local registeredNodes      = minetest.registered_nodes
 local registeredItems      = minetest.registered_items --? Why are these two different?
 local registeredCraftItems = minetest.registered_craftitems
 local newVec               = vector.new
+local zeroVec              = vector.zero
 
 local function vec2(x,y)
     return newVec(x,y,0)
@@ -109,6 +110,10 @@ local inserterAnimations = switch:new({
         return vec2(40,60), 30, 0, false
     end
 })
+--! No idea how to fix the rotation in blender
+local rotationFix = newVec(math.pi / 2, 0, 0)
+
+
 
 local inserter = {
     initial_properties = {
@@ -116,6 +121,7 @@ local inserter = {
         mesh = "inserter.b3d",
         textures ={"default_dirt.png"}
     },
+    position = zeroVec(),
     animationTimer = 0.0,
     boot = true,
     bootStage = 0,
@@ -196,13 +202,15 @@ function inserter:productionProcedure()
     productionSwitch:match(self.productionStage, self)
 end
 
---! No idea how to fix the rotation in blender
-local rotationFix = newVec(math.pi / 2, 0, 0)
+
+
+--! Minetest internal functions for entity object
+
 function inserter:on_activate()
     self.object:set_rotation(rotationFix)
     self:setAnimation("unpack")
+    self.position = self.object:get_position()
 end
-
 
 
 function inserter:on_step(delta)
