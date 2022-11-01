@@ -186,7 +186,7 @@ end
 
 local productionSwitch = switch:new({
     [0] = function(self)
-        write("production stage 0")
+        write("Searching for item")
     end,
     [1] = function(self)
         write("production stage 1")
@@ -211,7 +211,7 @@ end
 function inserter:on_activate()
     self.object:set_rotation(rotationFix)
     self:setAnimation("unpack")
-    self.position = self.object:get_position()
+    self.position = self.object:get_pos()
 end
 
 
