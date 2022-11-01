@@ -113,6 +113,41 @@ onLoaded(
 
 --! Beginning of the inserter object
 
+-- Specifically mutable so that items can be added in externally by mods
+
+--[[ 
+    This needs a few specifics to get past a hurtle:
+    1. This needs to be able to be told what inventory it can take items out of for specific nodes
+    2. This needs to be able to be told what items it puts into what inventory
+
+    Containers are implicit on their input definition. This means you can shovel as many definitions you want into the list and it will automatically
+    decypher what you are trying to say. An example:
+    
+    input, "default:chest", "flammable", "main"
+
+    You are telling the inserter on stage 2 of production that if it is trying to unload into a chest, if the item is flammable, look for somewhere
+    in the main inventory to drop the item off. If there is no room, the inserter will be stuck on this step!
+
+    Another example:
+
+    output, "default:furnace", "any", "output"
+
+    You have told the furnace that when it is taking something out of the furnace, it needs to look in the output slot, for anything.
+
+    The group "any" informs the inserter to literally take anything out of that inventory.
+]]
+
+local containers = {}
+
+local function createContainerItem(nodeName, listName)
+    containers[nodeName] = listName
+end
+-- Global api element
+function addInserterContainer(nodeName, listName)
+    createContainerItem(nodeName, listName)
+end
+
+
 local inserterAnimations = switch:new({
     unpack   = function()
         return vec2(1,20), 20, 0, false
@@ -193,7 +228,7 @@ end
     Production Stages
     0 - arm is back, reaching for item
     1 - arm is swinging forward
-    2 - arm is searching for place on belt to unload
+    2 - arm is searching for place on belt to unload, or for a place to put things into the container
     *belt has found a place to unload*
     3 - arm is swinging back to stage 0
 
