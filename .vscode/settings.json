@@ -1,5 +1,6 @@
 {
     "Lua.diagnostics.globals": [
-        "vector"
+        "vector",
+        "minetest"
     ]
 }
