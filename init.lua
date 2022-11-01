@@ -26,6 +26,17 @@ local function vec2(x,y)
     return newVec(x,y,0)
 end
 
+-- Give the vector a correct-er position to floor
+local positionAdjustment = immutable(vector.new(0.5,0.5,0.5))
+
+local function adjustFloor(inputVec)
+    return vector.add(inputVec, positionAdjustment)
+end
+
+local function entityFloor(object)
+    vector.floor(adjustFloor(object:get_pos()))
+end
+
 
 --! No animation because that's not implemented into Minetest
 
@@ -243,15 +254,9 @@ local beltItem = {
     oldPosition     = nil
 }
 
--- Give the vector a correct-er position to floor
-local adjustment = immutable(vector.new(0.5,0.5,0.5))
-local function adjustFloor(inputVec)
-    return vector.add(inputVec, adjustment)
-end
-
 -- Get the floored position
 function beltItem:pollPosition(object)
-    local flooredPosition = vector.floor(adjustFloor(object:get_pos()))
+    local flooredPosition = entityFloor(object)
 
     if not self.flooredPosition or not vector.equals(self.flooredPosition, flooredPosition) then
         self.flooredPosition = flooredPosition
@@ -272,22 +277,22 @@ function beltItem:saveStepMemory()
 end
 
 -- This is a hack to make the things move on the belts for now
-local vec0 = immutable(vector.new( 0, 0,-1))
-local vec1 = immutable(vector.new(-1, 0, 0))
-local vec2 = immutable(vector.new( 0, 0, 1))
-local vec3 = immutable(vector.new( 1, 0, 0))
+local dirVec0 = immutable(vector.new( 0, 0,-1))
+local dirVec1 = immutable(vector.new(-1, 0, 0))
+local dirVec2 = immutable(vector.new( 0, 0, 1))
+local dirVec3 = immutable(vector.new( 1, 0, 0))
 local directionSwitch = switch:new({
     [0] = function(object)
-        object:set_velocity(vec0)
+        object:set_velocity(dirVec0)
     end,
     [1] = function(object)
-        object:set_velocity(vec1)
+        object:set_velocity(dirVec1)
     end,
     [2] = function(object)
-        object:set_velocity(vec2)
+        object:set_velocity(dirVec2)
     end,
     [3] = function(object)
-        object:set_velocity(vec3)
+        object:set_velocity(dirVec3)
     end,
 })
 
