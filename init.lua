@@ -15,7 +15,9 @@ local registerNode         = minetest.register_node
 local getNode              = minetest.get_node
 local setNode              = minetest.set_node
 local onLoaded             = minetest.register_on_mods_loaded
+local addEntity            = minetest.add_entity
 local registerEntity       = minetest.register_entity
+local registerCraftItem    = minetest.register_craftitem
 local registeredNodes      = minetest.registered_nodes
 local registeredItems      = minetest.registered_items --? Why are these two different?
 local registeredCraftItems = minetest.registered_craftitems
@@ -235,6 +237,28 @@ end
 
 registerEntity("tech:inserter", inserter)
 
+
+--! Beginning of the inserter item
+
+local inserterItem = {
+    description     = "inserter",
+    inventory_image = "inserter.png"
+}
+
+local function adjustPlacement(inputPosition)
+    inputPosition.y = inputPosition.y - 0.3
+    return inputPosition
+end
+
+function inserterItem:on_place(placer, pointedThing)
+    local lookDir = placer:get_look_dir()
+    local fourDir = convertDir(dirToFourDir(lookDir))
+    write(dirToFourDir(lookDir))
+    addEntity(adjustPlacement(pointedThing.above), "tech:inserter")
+    -- setNode(pointedThing.above, {name="default:dirt"})
+end
+
+registerCraftItem("tech:inserter", inserterItem)
 
 
 
