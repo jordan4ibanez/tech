@@ -118,8 +118,17 @@ local inserter = {
     },
     animationTimer = 0.0,
     boot = true,
-    bootStage = 0
+    bootStage = 0,
+    productionStage = 0
 }
+--[[
+    Production Stages
+    0 - arm is back, reaching for item
+    1 - arm is swinging forward
+    2 - arm is searching for place on belt to unload
+    *belt has found a place to unload*
+    3 - arm is swinging back to stage 0
+]]
 
 -- Animation mechanics
 function inserter:setAnimation(animation)
