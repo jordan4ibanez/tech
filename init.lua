@@ -121,14 +121,6 @@ local inserter = {
     bootStage = 0,
     productionStage = 0
 }
---[[
-    Production Stages
-    0 - arm is back, reaching for item
-    1 - arm is swinging forward
-    2 - arm is searching for place on belt to unload
-    *belt has found a place to unload*
-    3 - arm is swinging back to stage 0
-]]
 
 -- Animation mechanics
 function inserter:setAnimation(animation)
@@ -174,6 +166,36 @@ function inserter:bootProcedure()
     bootSwitch:match(self.bootStage, self)
 end
 
+
+--[[
+    Production Stages
+    0 - arm is back, reaching for item
+    1 - arm is swinging forward
+    2 - arm is searching for place on belt to unload
+    *belt has found a place to unload*
+    3 - arm is swinging back to stage 0
+]]
+
+local productionSwitch = switch:new({
+    [0] = function(self)
+        write("production stage 0")
+    end,
+    [1] = function(self)
+        write("production stage 1")
+    end,
+    [2] = function(self)
+        write("production stage 2")
+    end,
+    [3] = function(self)
+        write("production stage 3")
+    end
+})
+
+function inserter:productionProcedure()
+    if self.boot then return end
+    productionSwitch:match(self.productionStage, self)
+end
+
 --! No idea how to fix the rotation in blender
 local rotationFix = newVec(math.pi / 2, 0, 0)
 function inserter:on_activate()
@@ -186,6 +208,7 @@ end
 function inserter:on_step(delta)
     local animationTimer = self:animationTick(delta)
     self:bootProcedure()
+    self:productionProcedure()
 end
 
 
