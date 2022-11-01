@@ -126,13 +126,15 @@ local inserterAnimations = switch:new({
 --! No idea how to fix the rotation in blender
 local rotationFix = newVec(math.pi / 2, 0, 0)
 
-
-
+local inserterSize = 0.7
 local inserter = {
     initial_properties = {
         visual = "mesh",
         mesh = "inserter.b3d",
-        textures ={"default_dirt.png"}
+        textures = {
+            "default_dirt.png"
+        },
+        visual_size = newVec(inserterSize, inserterSize, inserterSize),
     },
     position = zeroVec(),
     animationTimer = 0.0,
@@ -246,7 +248,7 @@ local inserterItem = {
 }
 
 local function adjustPlacement(inputPosition)
-    inputPosition.y = inputPosition.y - 0.3
+    inputPosition.y = inputPosition.y - 0.25
     return inputPosition
 end
 
