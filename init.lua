@@ -201,7 +201,7 @@ end
 
 local productionSwitch = switch:new({
     [0] = function(self)
-        write("Searching for item")
+        -- write("Searching for item")
     end,
     [1] = function(self)
         write("production stage 1")
@@ -252,12 +252,26 @@ local function adjustPlacement(inputPosition)
     return inputPosition
 end
 
+local function convertFourDirToYaw(inputDirection)
+    return (math.pi / 2.0) * -(inputDirection + 1)
+end
+
+
 function inserterItem:on_place(placer, pointedThing)
     local lookDir = placer:get_look_dir()
-    local fourDir = convertDir(dirToFourDir(lookDir))
-    write(dirToFourDir(lookDir))
-    addEntity(adjustPlacement(pointedThing.above), "tech:inserter")
-    -- setNode(pointedThing.above, {name="default:dirt"})
+    local fourDir = dirToFourDir(lookDir)
+    local yaw     = convertFourDirToYaw(fourDir)
+
+    local inserterEntity = addEntity(adjustPlacement(pointedThing.above), "tech:inserter")
+    if inserterEntity then
+        inserterEntity:set_rotation(
+            newVec(
+                math.pi / 2,
+                yaw,
+                0
+            )
+        )
+    end
 end
 
 registerCraftItem("tech:inserter", inserterItem)
