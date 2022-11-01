@@ -19,6 +19,11 @@ local registerEntity       = minetest.register_entity
 local registeredNodes      = minetest.registered_nodes
 local registeredItems      = minetest.registered_items --? Why are these two different?
 local registeredCraftItems = minetest.registered_craftitems
+local newVec               = vector.new
+
+local function vec2(x,y)
+    return newVec(x,y,0)
+end
 
 
 --! No animation because that's not implemented into Minetest
@@ -88,7 +93,109 @@ onLoaded(
     end
 )
 
+
+
+
+--! Beginning of the inserter object
+
+local inserterAnimations = switch:new({
+    unpack   = function()
+        return vec2(1,20), 20, 0, false
+    end,
+    selfTest = function()
+        return vec2(20,40), 60, 0, false
+    end,
+    fullyInitialize = function()
+        return vec2(40,60), 30, 0, false
+    end
+})
+
+local inserter = {
+    initial_properties = {
+        visual = "mesh",
+        mesh = "inserter.b3d",
+        textures ={"default_dirt.png"}
+    },
+    animationTimer = 0.0,
+    boot = true,
+    bootStage = 0
+}
+
+-- Animation mechanics
+function inserter:setAnimation(animation)
+    self.object:set_animation(inserterAnimations:match(animation))
+end
+
+function inserter:animationTick(delta)
+    self.animationTimer = self.animationTimer + delta
+    return self.animationTimer
+end
+function inserter:resetAnimationTimer()
+    self.animationTimer = 0
+end
+
+-- Inserter boot procedure
+local bootSwitch = switch:new({
+    [0] = function(self)
+        if self.animationTimer >= 1.5 then
+            self:setAnimation("selfTest")
+            self:resetAnimationTimer()
+            self.bootStage = self.bootStage + 1;
+        end
+    end,
+    [1] = function(self)
+        if self.animationTimer >= 1.5 then
+            self:setAnimation("fullyInitialize")
+            self:resetAnimationTimer()
+            self.bootStage = self.bootStage + 1;
+        end
+    end,
+    [2] = function(self)
+        if self.animationTimer >= 1.5 then
+            -- Boot procedure complete
+            self.bootStage = -1
+            self.boot = false
+        end
+
+    end
+})
+
+function inserter:bootProcedure()
+    if not self.boot then return end
+    bootSwitch:match(self.bootStage, self)
+end
+
+--! No idea how to fix the rotation in blender
+local rotationFix = newVec(math.pi / 2, 0, 0)
+function inserter:on_activate()
+    self.object:set_rotation(rotationFix)
+    self:setAnimation("unpack")
+end
+
+
+
+function inserter:on_step(delta)
+    local animationTimer = self:animationTick(delta)
+    self:bootProcedure()
+end
+
+
+registerEntity("tech:inserter", inserter)
+
+
+
+
+
+
+
+
+
+
+
+
+
 --! Beginning of belt item object
+
 local beltItem = {
     flooredPosition = nil,
     oldPosition     = nil
@@ -158,7 +265,7 @@ function beltItem:pollBelt(object)
     local beltSpeed, beltAngle = beltSwitch:match(beltName)
 
     if beltSpeed then
-        write(beltSpeed, " ", beltAngle, " ", beltDir)
+        -- write(beltSpeed, " ", beltAngle, " ", beltDir)
         directionSwitch:match(beltDir, object)
     else
         write("I ain't on no belt")
