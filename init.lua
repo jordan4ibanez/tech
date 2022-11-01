@@ -180,6 +180,8 @@ end
     2 - arm is searching for place on belt to unload
     *belt has found a place to unload*
     3 - arm is swinging back to stage 0
+
+    The bone that the pseudo item needs to be attached to is called "grabber"
 ]]
 
 local productionSwitch = switch:new({
