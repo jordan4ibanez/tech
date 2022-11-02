@@ -9,10 +9,10 @@ local buildString          = customTools.buildString
 
 --! Automate loading
 local fileList = {
-    "belt", "inserter", "belt_item"
+    "belt", "inserter", "belt_item", "inserter_visual"
 }
 
-local function load(fileName)
+local function loadFromRoot(fileName)
     assert(
         loadfile(
             buildString(
@@ -23,5 +23,5 @@ local function load(fileName)
 end
 
 for _,fileName in ipairs(fileList) do
-    load(fileName)
+    loadFromRoot(fileName)
 end
