@@ -206,6 +206,12 @@ local inserterAnimations = switch:new({
     end,
     fullyInitialize = function()
         return vec2(40,60), 30, 0, false
+    end,
+    reachForward = function()
+        return vec2(60,80), 30, 0, false
+    end,
+    reachBackward = function()
+        return vec2(80,100), 30, 0, false
     end
 })
 --! No idea how to fix the rotation in blender
@@ -318,12 +324,15 @@ local function examineInputInventories(nodeName)
     return false
 end
 
-local function searchInput(inputPosition)
+local function searchInput(self)
+    if not self.input then return end
+
+    local inputPosition = self.input
     
     local nodeIdentity = getNode(inputPosition)
     local nodeName     = extractName(nodeIdentity)
 
-    --! if it's a belt, do another function then return here
+    --! if it's a belt, do another function to search the belt position then return here
 
     local possibleInventorySelections  = examineInputInventories(nodeName)
 
@@ -339,6 +348,12 @@ local function searchInput(inputPosition)
             
             if selectedIndex then
                 write("got one at ", selectedIndex)
+                write("set self metadata")
+                write("set self attached item visual")
+                write("move onto next step of production")
+                
+                
+                self.productionStage = self.productionStage + 1
             end
         end
     end
@@ -346,8 +361,8 @@ end
 
 local productionSwitch = switch:new({
     [0] = function(self)
-        if self.input then
-            searchInput(self.input)
+        if self then
+            searchInput(self)
         end
     end,
     [1] = function(self)
