@@ -19,7 +19,7 @@ local function loadFromRoot(fileName)
                 rootPath, "/", fileName, ".lua"
             )
         )
-    )(rootPath)
+    )(rootPath, customTools)
 end
 
 for _,fileName in ipairs(fileList) do
