@@ -32,6 +32,8 @@ local newVec               = vector.new
 local zeroVec              = vector.zero
 local vecMultiply          = vector.multiply
 local vecAdd               = vector.add
+local serialize            = minetest.serialize
+local deserialize          = minetest.deserialize
 
 
 
@@ -334,6 +336,10 @@ function inserter:on_activate()
     end
 end
 
+function inserter:get_staticdata()
+    write("ahhh")
+end
+
 
 function inserter:on_step(delta)
     local animationTimer = self:animationTick(delta)
@@ -343,6 +349,9 @@ end
 
 function inserter:on_punch()
     addItem(self.position, "tech:inserter")
+    if self.holding then
+        addItem(self.position, self.holding)
+    end
     self.visual:remove()
     self.object:remove()
 end
