@@ -1,3 +1,5 @@
+local newVec = vector.new
+
 -- This is a translation attempt out of D but done really badly - now yoinked from luatic
 
 local function write(...)
@@ -140,16 +142,45 @@ local function convertDir(inputDir)
     return (inputDir + 2) % 4
 end
 
+local function vec2(x,y)
+    return newVec(x,y,0)
+end
+
+-- Give the vector a correct-er position to floor
+local positionAdjustment = immutable(vector.new(0.5,0.5,0.5))
+
+local function adjustFloor(inputVec)
+    return vector.add(inputVec, positionAdjustment)
+end
+
+local function entityFloor(object)
+    vector.floor(adjustFloor(object:get_pos()))
+end
+
+-- Very lazy functions
+local function extractName(nodeIdentity)
+    return nodeIdentity.name
+end
+
+local function extractDirection(nodeIdentity)
+    return nodeIdentity.param2
+end
+
 
 -- There are two ways to do this: _, _, _ or {_, _, _}. I like the second one better
 return {
-    switch          = switch,
-    write           = write,
-    immutable       = immutable,
-    immutableIpairs = immutableIpairs,
-    immutablePairs  = immutablePairs,
-    buildString     = buildString,
-    dirToFourDir    = dirToFourDir,
-    fourDirToDir    = fourDirToDir,
-    convertDir      = convertDir
+    switch           = switch,
+    write            = write,
+    immutable        = immutable,
+    immutableIpairs  = immutableIpairs,
+    immutablePairs   = immutablePairs,
+    buildString      = buildString,
+    dirToFourDir     = dirToFourDir,
+    fourDirToDir     = fourDirToDir,
+    convertDir       = convertDir,
+    vec2             = vec2,
+    entityFloor      = entityFloor,
+    extractName      = extractName,
+    extractDirection = extractDirection
+
 }
