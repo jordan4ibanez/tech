@@ -319,8 +319,12 @@ local function examineInputInventories(nodeName)
 end
 
 local function searchInput(inputPosition)
+    
     local nodeIdentity = getNode(inputPosition)
     local nodeName     = extractName(nodeIdentity)
+
+    --! if it's a belt, do another function then return here
+
     local possibleInventorySelections  = examineInputInventories(nodeName)
 
     if possibleInventorySelections then
