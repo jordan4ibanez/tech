@@ -123,29 +123,53 @@ onLoaded(
     Containers are implicit on their input definition. This means you can shovel as many definitions you want into the list and it will automatically
     decypher what you are trying to say. An example:
     
-    input, "default:chest", "flammable", "main"
+    "input", "default:chest", "flammable", "main"
 
     You are telling the inserter on stage 2 of production that if it is trying to unload into a chest, if the item is flammable, look for somewhere
     in the main inventory to drop the item off. If there is no room, the inserter will be stuck on this step!
 
     Another example:
 
-    output, "default:furnace", "any", "output"
+    "output", "default:furnace", "any", "output"
 
-    You have told the furnace that when it is taking something out of the furnace, it needs to look in the output slot, for anything.
+    You have told the furnace that when it is taking something out of the furnace, it needs to look in the output slot, for anything. If there's 
+    nothing in there, the inserter will be stuck on this step. This is step 0 of production.
 
     The group "any" informs the inserter to literally take anything out of that inventory.
+
 ]]
 
-local containers = {}
+local containers = {
+    input  = {},
+    output = {},
+}
 
-local function createContainerItem(nodeName, listName)
-    containers[nodeName] = listName
+local function createContainerItem(io, nodeName, group, inventory)
+    -- Must build up the arrays
+    if not containers[io][nodeName] then
+        containers[io][nodeName] = {}
+    end
+
+    if not containers[io][nodeName][group] then
+        containers[io][nodeName][group] = inventory
+    else
+        error(
+            buildString(
+                "There has been a duplicate allocation. This errors out to not cause silent bugs. ",
+                "Specific duplication info:\nIO(", io, ")\nNode Name(", nodeName, ")\nGroup(", group, ")\nInventory(", inventory, ")"
+            ),
+            1
+        )
+    end
 end
+
 -- Global api element
 function addInserterContainer(nodeName, listName)
     createContainerItem(nodeName, listName)
 end
+
+-- Set some container defaults for Minetest's default game
+
 
 
 local inserterAnimations = switch:new({
