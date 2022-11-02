@@ -55,9 +55,7 @@ local InserterVisual = {
 function InserterVisual:on_activate(staticdata, dtime_s)
     if staticdata == "new" then
         self.deleteMe = false
-        write("I'm alive")
     else
-        write("see ya")
         self.object:remove()
     end
 end
