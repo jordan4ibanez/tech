@@ -112,25 +112,32 @@ createContainerItem("input",  "default:chest", "main")
 
 
 
+local unpackVec2          = immutable(vec2(1,20))
+local selfTestVec2        = immutable(vec2(20,40))
+local fullyInitializeVec2 = immutable(vec2(40,60))
+local reachForwardVec2    = immutable(vec2(60,80))
+local reachBackwardVec2   = immutable(vec2(80,100))
 
-local inserterAnimations = switch:new({
+local inserterAnimations  = switch:new({
     unpack   = function()
-        return vec2(1,20), 20, 0, false
+        return unpackVec2, 20, 0, false
     end,
     selfTest = function()
-        return vec2(20,40), 60, 0, false
+        return selfTestVec2, 60, 0, false
     end,
     fullyInitialize = function()
-        return vec2(40,60), 30, 0, false
+        return fullyInitializeVec2, 30, 0, false
     end,
     reachForward = function()
-        return vec2(60,80), 30, 0, false
+        return reachForwardVec2, 30, 0, false
     end,
     reachBackward = function()
-        return vec2(80,100), 30, 0, false
+        return reachBackwardVec2, 30, 0, false
     end
 })
+
 --! No idea how to fix the rotation in blender
+
 local rotationFix = newVec(math.pi / 2, 0, 0)
 
 local inserterSize = 0.7
