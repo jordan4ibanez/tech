@@ -192,7 +192,6 @@ local bootSwitch = switch:new({
             self.bootStage = -1
             self.boot = false
         end
-
     end
 })
 
@@ -317,7 +316,16 @@ function inserter:on_activate()
     self:setAnimation("unpack")
     self.position = self.object:get_pos()
 
-    local itemEntityVisual = addItem(self.position, "default:dirt")
+    local itemEntityVisual = addEntity(self.position, "tech:inserterVisual", "new")
+    if itemEntityVisual then
+        local visualEntity = itemEntityVisual:get_luaentity()
+        visualEntity:setItem("default:dirt")
+        itemEntityVisual:set_attach(self.object, "grabber", newVec(0,4,0), zeroVec(), false)
+        -- Create a new pointer out of thin air
+        self.visual = itemEntityVisual
+    end
+
+    -- local itemEntityVisual = addItem(self.position, "default:dirt")
     -- itemEntityVisual:set_attach(self.object, "grabber", zeroVec(), zeroVec(), false)
     
 end
@@ -331,6 +339,7 @@ end
 
 function inserter:on_punch()
     addItem(self.position, "tech:inserter")
+    self.visual:remove()
     self.object:remove()
 end
 
