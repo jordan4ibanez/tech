@@ -3,6 +3,7 @@
         "vector",
         "minetest",
         "addInserterContainer",
-        "ItemStack"
+        "ItemStack",
+        "dump"
     ]
 }
