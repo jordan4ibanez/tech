@@ -45,7 +45,7 @@ local InserterVisual = {
         collide_with_objects = false,
         collisionbox = { 0, 0, 0, 0, 0, 0 },
         visual = "wielditem",
-        visual_size = {x = 1, y = 1},
+        visual_size = {x = 0.25, y = 0.25},
         textures = {""},
         is_visible = false,
     },
@@ -53,7 +53,13 @@ local InserterVisual = {
 }
 
 function InserterVisual:on_activate(staticdata, dtime_s)
-    write(dump(staticdata))
+    if staticdata == "new" then
+        self.deleteMe = false
+        write("I'm alive")
+    else
+        write("see ya")
+        self.object:remove()
+    end
 end
 
 function InserterVisual:setItem(item)
@@ -75,6 +81,12 @@ function InserterVisual:setItem(item)
         visual = "wielditem",
         textures = {itemname},
         glow = glow,
+    })
+end
+
+function InserterVisual:removeItem()
+    self.object:set_properties({
+        is_visible = false,
     })
 end
 
