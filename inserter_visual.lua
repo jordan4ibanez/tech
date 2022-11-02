@@ -38,27 +38,22 @@ local vecAdd               = vector.add
 --! Must run after mods are loaded, entities are dynamic anyways
 -- This is the entity that is "pushed" along the belt
 
-local nodeList
-local itemList
-local craftItemList
-
-onLoaded(
-    function()
-        -- These should absolutely never change
-        nodeList      = immutable(registeredNodes)
-        itemList      = immutable(registeredItems)
-        craftItemList = immutable(registeredCraftItems)
-    end
-)
-
-
 
 local InserterVisual = {
+    initial_properties = {
+        physical = false,
+        collide_with_objects = false,
+        collisionbox = { 0, 0, 0, 0, 0, 0 },
+        visual = "wielditem",
+        visual_size = {x = 1, y = 1},
+        textures = {""},
+        is_visible = false,
+    },
     deleteMe = true
 }
 
 function InserterVisual:on_activate(staticdata, dtime_s)
-
+    write(dump(staticdata))
 end
 
 function InserterVisual:setItem(item)
@@ -70,24 +65,15 @@ function InserterVisual:setItem(item)
         -- item not yet known
         return
     end
-    
+
     local itemname = stack:is_known() and stack:get_name() or "unknown"
-
-    local size = 1
     local def = registeredItems[itemname]
-
     local glow = def and def.light_source and math.floor(def.light_source / 2 + 0.5)
-
-    local c = {-size, -size, -size, size, size, size}
 
     self.object:set_properties({
         is_visible = true,
         visual = "wielditem",
         textures = {itemname},
-        visual_size = {x = size + size_bias, y = size + size_bias},
-        collisionbox = c,
-        automatic_rotate = math.pi * 0.5 * 0.2 / size,
-        wield_item = self.itemstring,
         glow = glow,
     })
 end
