@@ -347,12 +347,17 @@ local function searchInput(self)
             local selectedIndex = getFirstIndex(inventory, inventorySelection)
             
             if selectedIndex then
+                
+                local stack = inventory:get_stack(inventorySelection, selectedIndex)
+                inventory:remove_item(inventorySelection, stack)
+
                 write("got one at ", selectedIndex)
+
                 write("set self metadata")
                 write("set self attached item visual")
                 write("move onto next step of production")
-                
-                
+
+                self:setAnimation("reachForward")
                 self.productionStage = self.productionStage + 1
             end
         end
@@ -388,6 +393,10 @@ function inserter:on_activate()
     self.object:set_rotation(rotationFix)
     self:setAnimation("unpack")
     self.position = self.object:get_pos()
+
+    local itemEntityVisual = addItem(self.position, "default:dirt")
+    -- itemEntityVisual:set_attach(self.object, "grabber", zeroVec(), zeroVec(), false)
+    
 end
 
 
