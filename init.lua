@@ -13,6 +13,7 @@ local convertDir           = customTools.convertDir
 -- Minetest functions
 local registerNode         = minetest.register_node
 local getNode              = minetest.get_node
+local getMeta              = minetest.get_meta
 local setNode              = minetest.set_node
 local onLoaded             = minetest.register_on_mods_loaded
 local addEntity            = minetest.add_entity
@@ -38,6 +39,15 @@ end
 
 local function entityFloor(object)
     vector.floor(adjustFloor(object:get_pos()))
+end
+
+-- Very lazy functions
+local function extractName(nodeIdentity)
+    return nodeIdentity.name
+end
+
+local function extractDirection(nodeIdentity)
+    return nodeIdentity.param2
 end
 
 
@@ -121,21 +131,21 @@ onLoaded(
     2. This needs to be able to be told what items it puts into what inventory
 
     Containers are implicit on their input definition. This means you can shovel as many definitions you want into the list and it will automatically
-    decypher what you are trying to say. An example:
+    decypher what you are trying to say. Just do not duplicate elements. An example:
     
-    "input", "default:chest", "flammable", "main"
+    "input", "default:chest", "main"
 
-    You are telling the inserter on stage 2 of production that if it is trying to unload into a chest, if the item is flammable, look for somewhere
+    You are telling the inserter on stage 2 of production that if it is trying to unload into a chest look for somewhere
     in the main inventory to drop the item off. If there is no room, the inserter will be stuck on this step!
 
     Another example:
 
-    "output", "default:furnace", "any", "output"
+    "output", "default:furnace", "output"
 
-    You have told the furnace that when it is taking something out of the furnace, it needs to look in the output slot, for anything. If there's 
+    You have told the furnace that when it is taking something out of the furnace, it needs to look in the output slot. If there's 
     nothing in there, the inserter will be stuck on this step. This is step 0 of production.
 
-    The group "any" informs the inserter to literally take anything out of that inventory.
+    Input and output gets kind of confusing. Just know that the inserter sees output as what the container is outputting (what it is trying to grab), and vice versa.
 
 ]]
 
@@ -144,31 +154,53 @@ local containers = {
     output = {},
 }
 
-local function createContainerItem(io, nodeName, group, inventory)
+local function createContainerItem(io, nodeName, inventory)
     -- Must build up the arrays
     if not containers[io][nodeName] then
         containers[io][nodeName] = {}
     end
 
-    if not containers[io][nodeName][group] then
-        containers[io][nodeName][group] = inventory
+    if not containers[io][nodeName][inventory] then
+        containers[io][nodeName][inventory] = true
     else
         error(
             buildString(
                 "There has been a duplicate allocation. This errors out to not cause silent bugs. ",
-                "Specific duplication info:\nIO(", io, ")\nNode Name(", nodeName, ")\nGroup(", group, ")\nInventory(", inventory, ")"
+                "Specific duplication info:\nIO(", io, ")\nNode Name(", nodeName, ")\nInventory(", inventory, ")"
             ),
             1
         )
     end
 end
 
--- Global api element
-function addInserterContainer(nodeName, listName)
-    createContainerItem(nodeName, listName)
+local function examineOutputInventories(nodeName)
+    if containers.input[nodeName] then
+        -- Return a list of elements
+        return containers.input[nodeName]
+    end
+    return false
 end
 
--- Set some container defaults for Minetest's default game
+local function searchOutput(inputPosition)
+    local nodeIdentity = getNode(inputPosition)
+    local nodeName     = extractName(nodeIdentity)
+    local inventories  = examineOutputInventories(nodeName)
+    -- local meta = getMeta(inputPosition)
+
+    if inventories then
+        write("found an inventory: ", inventories)
+    end
+end
+
+-- Global api element
+function addInserterContainer(io, nodeName, inventory, group)
+    createContainerItem(io, nodeName, inventory, group)
+end
+
+--! Set some container defaults for Minetest's default game. This is debug for now.
+createContainerItem("output", "default:chest", "main", "any")
+createContainerItem("input",  "default:chest", "main", "any")
+
 
 
 
@@ -409,13 +441,7 @@ local directionSwitch = switch:new({
     end,
 })
 
--- Very lazy functions
-local function extractName(nodeIdentity)
-    return nodeIdentity.name
-end
-local function extractDirection(nodeIdentity)
-    return nodeIdentity.param2
-end
+
 
 function beltItem:pollBelt(object)
     local position = self.flooredPosition
