@@ -110,6 +110,31 @@ local dirMasterSwitch = switch:new({
 local function dirToFourDir(dir)
     return dirMasterSwitch:match(math.abs(dir.x) > math.abs(dir.z), dir)
 end
+
+-- Table of possible dirs
+local facedir_to_dir = {
+	vector.new( 0,  0,  1),
+	vector.new( 1,  0,  0),
+	vector.new( 0,  0, -1),
+	vector.new(-1,  0,  0),
+	vector.new( 0, -1,  0),
+	vector.new( 0,  1,  0),
+}
+-- Mapping from facedir value to index in facedir_to_dir.
+local facedir_to_dir_map = {
+	[0]=1, 2, 3, 4,
+	5, 2, 6, 4,
+	6, 2, 5, 4,
+	1, 5, 3, 6,
+	1, 6, 3, 5,
+	1, 4, 3, 2,
+}
+
+local function fourDirToDir(fourdir)
+	return facedir_to_dir[facedir_to_dir_map[fourdir % 4]]
+end
+
+
 -- Makes the belt face the direction the player expects
 local function convertDir(inputDir)
     return (inputDir + 2) % 4
@@ -125,5 +150,6 @@ return {
     immutablePairs  = immutablePairs,
     buildString     = buildString,
     dirToFourDir    = dirToFourDir,
+    fourDirToDir    = fourDirToDir,
     convertDir      = convertDir
 }
