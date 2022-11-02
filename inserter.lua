@@ -154,7 +154,9 @@ local inserter = {
     animationTimer = 0.0,
     boot = true,
     bootStage = 0,
-    productionStage = 0
+    productionStage = 0,
+    visual = nil,
+    holding = nil
 }
 
 -- Animation mechanics
@@ -270,16 +272,14 @@ local function searchInput(self)
             
             if selectedIndex then
                 
-                local stack = inventory:get_stack(inventorySelection, selectedIndex)
+                local stack = inventory:get_stack(inventorySelection, selectedIndex):take_item(1)
+
                 inventory:remove_item(inventorySelection, stack)
 
-                write("got one at ", selectedIndex)
-
-                write("set self metadata")
-                write("set self attached item visual")
-                write("move onto next step of production")
-
+                self.holding = stack
+                self:updateVisual(stack:get_name())
                 self:setAnimation("reachForward")
+                
                 self.productionStage = self.productionStage + 1
             end
         end
@@ -308,6 +308,17 @@ function inserter:productionProcedure()
     productionSwitch:match(self.productionStage, self)
 end
 
+function inserter:updateVisual(newItem)
+    if self.visual then
+        local visualEntity = self.visual:get_luaentity()
+        if not newItem then
+            visualEntity:removeItem()
+        else
+            visualEntity:setItem(newItem)
+        end
+    end
+end
+
 
 --! Minetest internal functions for entity object
 
@@ -318,16 +329,9 @@ function inserter:on_activate()
 
     local itemEntityVisual = addEntity(self.position, "tech:inserterVisual", "new")
     if itemEntityVisual then
-        local visualEntity = itemEntityVisual:get_luaentity()
-        visualEntity:setItem("default:dirt")
         itemEntityVisual:set_attach(self.object, "grabber", newVec(0,4,0), zeroVec(), false)
-        -- Create a new pointer out of thin air
         self.visual = itemEntityVisual
     end
-
-    -- local itemEntityVisual = addItem(self.position, "default:dirt")
-    -- itemEntityVisual:set_attach(self.object, "grabber", zeroVec(), zeroVec(), false)
-    
 end
 
 
