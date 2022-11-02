@@ -176,28 +176,9 @@ local function createContainerItem(io, nodeName, inventory)
     end
 end
 
-local function examineOutputInventories(nodeName)
-    if containers.input[nodeName] then
-        -- Return a list of elements
-        return containers.input[nodeName]
-    end
-    return false
-end
-
-local function searchOutput(inputPosition)
-    local nodeIdentity = getNode(inputPosition)
-    local nodeName     = extractName(nodeIdentity)
-    local inventories  = examineOutputInventories(nodeName)
-    -- local meta = getMeta(inputPosition)
-
-    if inventories then
-        write("found an inventory: ", inventories)
-    end
-end
-
 -- Global api element
-function addInserterContainer(io, nodeName, inventory, group)
-    createContainerItem(io, nodeName, inventory, group)
+function addInserterContainer(io, nodeName, inventory)
+    createContainerItem(io, nodeName, inventory)
 end
 
 --! Set some container defaults for Minetest's default game. This is debug for now.
@@ -294,9 +275,32 @@ end
     The bone that the pseudo item needs to be attached to is called "grabber"
 ]]
 
+local function examineInputInventories(nodeName)
+    if containers.input[nodeName] then
+        -- Return a list of elements
+        return containers.input[nodeName]
+    end
+    return false
+end
+
+local function searchInput(inputPosition)
+    local nodeIdentity = getNode(inputPosition)
+    local nodeName     = extractName(nodeIdentity)
+    local inventories  = examineInputInventories(nodeName)
+    -- local meta = getMeta(inputPosition)
+
+    if inventories then
+        write("found an input inventory: ", inventories)
+    else
+        write("No inventory was found")
+    end
+end
+
 local productionSwitch = switch:new({
     [0] = function(self)
-        -- write("Searching for item")
+        if self.input then
+            searchInput(self.input)
+        end
     end,
     [1] = function(self)
         write("production stage 1")
@@ -371,9 +375,10 @@ function inserterItem:on_place(placer, pointedThing)
     local yaw     = convertFourDirToYaw(fourDir)
     local above   = pointedThing.above
 
-    local inserterEntity = addEntity(adjustPlacement(above), "tech:inserter")
-    if inserterEntity then
-        inserterEntity:set_rotation(
+    local inserterObject = addEntity(adjustPlacement(above), "tech:inserter")
+
+    if inserterObject then
+        inserterObject:set_rotation(
             newVec(
                 math.pi / 2,
                 yaw,
@@ -383,8 +388,10 @@ function inserterItem:on_place(placer, pointedThing)
         local frontDirection = fourDirToDir(fourDir)
         local front = vecAdd(frontDirection, above)
         local back  = vecAdd(vecMultiply(frontDirection, -1), above)
-        setNode(front, {name = "default:dirt"})
-        setNode(back, {name = "default:glass"})
+
+        local entity = inserterObject:get_luaentity()
+        entity.input  = back
+        entity.output = front
     end
 end
 
