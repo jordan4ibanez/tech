@@ -9,6 +9,7 @@ local immutableIpairs      = customTools.immutableIpairs
 local immutablePairs       = customTools.immutablePairs
 local buildString          = customTools.buildString
 local dirToFourDir         = customTools.dirToFourDir
+local fourDirToDir         = customTools.fourDirToDir
 local convertDir           = customTools.convertDir
 -- Minetest functions
 local registerNode         = minetest.register_node
@@ -25,6 +26,8 @@ local registeredItems      = minetest.registered_items --? Why are these two dif
 local registeredCraftItems = minetest.registered_craftitems
 local newVec               = vector.new
 local zeroVec              = vector.zero
+local vecMultiply          = vector.multiply
+local vecAdd               = vector.add
 
 local function vec2(x,y)
     return newVec(x,y,0)
@@ -198,8 +201,8 @@ function addInserterContainer(io, nodeName, inventory, group)
 end
 
 --! Set some container defaults for Minetest's default game. This is debug for now.
-createContainerItem("output", "default:chest", "main", "any")
-createContainerItem("input",  "default:chest", "main", "any")
+createContainerItem("output", "default:chest", "main")
+createContainerItem("input",  "default:chest", "main")
 
 
 
@@ -366,8 +369,9 @@ function inserterItem:on_place(placer, pointedThing)
     local lookDir = placer:get_look_dir()
     local fourDir = dirToFourDir(lookDir)
     local yaw     = convertFourDirToYaw(fourDir)
+    local above   = pointedThing.above
 
-    local inserterEntity = addEntity(adjustPlacement(pointedThing.above), "tech:inserter")
+    local inserterEntity = addEntity(adjustPlacement(above), "tech:inserter")
     if inserterEntity then
         inserterEntity:set_rotation(
             newVec(
@@ -376,6 +380,11 @@ function inserterItem:on_place(placer, pointedThing)
                 0
             )
         )
+        local frontDirection = fourDirToDir(fourDir)
+        local front = vecAdd(frontDirection, above)
+        local back  = vecAdd(vecMultiply(frontDirection, -1), above)
+        setNode(front, {name = "default:dirt"})
+        setNode(back, {name = "default:glass"})
     end
 end
 
