@@ -157,19 +157,28 @@ local containers = {
     output = {},
 }
 
+local function tableContains(table, element)
+    for _,value in ipairs(table) do
+        if value == element then
+            return true
+        end
+    end
+    return false
+end
+
 local function createContainerItem(io, nodeName, inventory)
     -- Must build up the arrays
     if not containers[io][nodeName] then
         containers[io][nodeName] = {}
     end
 
-    if not containers[io][nodeName][inventory] then
-        containers[io][nodeName][inventory] = true
+    if not tableContains(containers[io][nodeName], inventory) then
+        table.insert(containers[io][nodeName], inventory)
     else
         error(
             buildString(
-                "There has been a duplicate allocation. This errors out to not cause silent bugs. ",
-                "Specific duplication info:\nIO(", io, ")\nNode Name(", nodeName, ")\nInventory(", inventory, ")"
+                "\nThere has been a duplicate allocation in inserter containers. This errors out to not cause silent bugs. ",
+                "Specific duplication info:\n\nIO = ", io, "\nNode Name = ", nodeName, "\nInventory = ", inventory, "\n"
             ),
             1
         )
@@ -275,6 +284,32 @@ end
     The bone that the pseudo item needs to be attached to is called "grabber"
 ]]
 
+-- Grab an inventory that is not empty
+local function grabFirstInventory(possibleInventorySelections, inventory)
+
+    for _,name in ipairs(possibleInventorySelections) do
+        if not inventory:is_empty(name) then
+            return name
+        end
+    end
+
+    return false
+end
+-- Grab the first item out of the list
+
+local function getFirstIndex(inventory, inventorySelection)
+    local inventorySize = inventory:get_size(inventorySelection)
+    local list = inventory:get_list(inventorySelection)
+
+    for i = 1,inventorySize do
+        if not list[i]:is_empty() then
+            return i
+        end
+    end
+
+    return false
+end
+
 local function examineInputInventories(nodeName)
     if containers.input[nodeName] then
         -- Return a list of elements
@@ -286,13 +321,22 @@ end
 local function searchInput(inputPosition)
     local nodeIdentity = getNode(inputPosition)
     local nodeName     = extractName(nodeIdentity)
-    local inventories  = examineInputInventories(nodeName)
-    -- local meta = getMeta(inputPosition)
+    local possibleInventorySelections  = examineInputInventories(nodeName)
 
-    if inventories then
-        write("found an input inventory: ", inventories)
-    else
-        write("No inventory was found")
+    if possibleInventorySelections then
+
+        local meta = getMeta(inputPosition)
+        local inventory = meta:get_inventory()
+        local inventorySelection = grabFirstInventory(possibleInventorySelections, inventory)
+
+        if inventorySelection then
+
+            local selectedIndex = getFirstIndex(inventory, inventorySelection)
+            
+            if selectedIndex then
+                write("got one at ", selectedIndex)
+            end
+        end
     end
 end
 
