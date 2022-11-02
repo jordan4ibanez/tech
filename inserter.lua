@@ -1,7 +1,6 @@
-local rootPath = ...
+local rootPath, customTools = ...
 
 -- Jordan4ibanez functions
-local customTools          = dofile(rootPath .. "/custom_tools.lua")
 local buildString          = customTools.buildString
 local switch               = customTools.switch
 local write                = customTools.write
@@ -36,21 +35,7 @@ local vecAdd               = vector.add
 
 
 
---! Must run after mods are loaded, entities are dynamic anyways
--- This is the entity that is "pushed" along the belt
 
-local nodeList
-local itemList
-local craftItemList
-
-onLoaded(
-    function()
-        -- These should absolutely never change
-        nodeList      = immutable(registeredNodes)
-        itemList      = immutable(registeredItems)
-        craftItemList = immutable(registeredCraftItems)
-    end
-)
 
 
 

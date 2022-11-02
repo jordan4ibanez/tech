@@ -1,7 +1,6 @@
-local rootPath = ...
+local rootPath, customTools = ...
 
 -- Jordan4ibanez functions
-local customTools          = dofile(rootPath .. "/custom_tools.lua")
 local buildString          = customTools.buildString
 local switch               = customTools.switch
 local write                = customTools.write
