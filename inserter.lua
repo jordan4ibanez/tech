@@ -34,7 +34,9 @@ local vecMultiply          = vector.multiply
 local vecAdd               = vector.add
 local serialize            = minetest.serialize
 local deserialize          = minetest.deserialize
-
+-- Lua functions
+local floor                = math.floor
+local ceil                 = math.ceil
 
 
 
@@ -337,7 +339,15 @@ function inserter:on_activate()
 end
 
 function inserter:get_staticdata()
-    write("ahhh")
+    local tempTable = {}
+
+    for key,value in pairs(self) do
+        if key ~= "object" and key ~= "visual" then
+
+            write(key, value)
+            
+        end
+    end
 end
 
 
@@ -403,6 +413,9 @@ function inserterItem:on_place(placer, pointedThing)
             )
         )
         local frontDirection = fourDirToDir(fourDir)
+
+        above.y = ceil(above.y)
+
         local front = vecAdd(frontDirection, above)
         local back  = vecAdd(vecMultiply(frontDirection, -1), above)
 
