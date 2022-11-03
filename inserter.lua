@@ -140,6 +140,11 @@ local inserterAnimations  = switch:new({
     end
 })
 
+local shortCutAnimations = {"reachBackward", "reachForward", "reachForward", "reachBackward"}
+local function shortCutActivateAnimation(stage)
+    return shortCutAnimations[stage + 1]
+end
+
 --! No idea how to fix the rotation in blender
 
 local rotationFix = newVec(math.pi / 2, 0, 0)
@@ -158,9 +163,10 @@ local inserter = {
     animationTimer = 0.0,
     boot = true,
     bootStage = 0,
+    production = false,
     productionStage = 0,
     visual = nil,
-    holding = nil
+    holding = ""
 }
 
 -- Animation mechanics
@@ -197,6 +203,7 @@ local bootSwitch = switch:new({
             -- Boot procedure complete
             self.bootStage = -1
             self.boot = false
+            self.production = true
         end
     end
 })
@@ -280,8 +287,8 @@ local function searchInput(self)
 
                 inventory:remove_item(inventorySelection, stack)
 
-                self.holding = stack
-                self:updateVisual(stack:get_name())
+                self.holding = stack:get_name()
+                self:updateVisual(self.holding)
                 self:setAnimation("reachForward")
                 
                 self.productionStage = self.productionStage + 1
@@ -297,7 +304,7 @@ local productionSwitch = switch:new({
         end
     end,
     [1] = function(self)
-        write("production stage 1")
+        -- write("production stage 1")
     end,
     [2] = function(self)
         write("production stage 2")
@@ -326,8 +333,29 @@ end
 
 --! Minetest internal functions for entity object
 
-function inserter:on_activate()
-    self.object:set_rotation(rotationFix)
+local function gotStaticData(self, dataTable)
+    for key, value in pairs(dataTable) do
+        self[key] = value
+    end
+
+    local itemEntityVisual = addEntity(self.position, "tech:inserterVisual", "new")
+    if itemEntityVisual then
+
+        itemEntityVisual:set_attach(self.object, "grabber", newVec(0,4,0), zeroVec(), false)
+
+        self.visual = itemEntityVisual
+
+        if self.holding ~= "" then
+            self:updateVisual(self.holding)
+        end
+    end
+
+    if self.production then
+        self:setAnimation(shortCutActivateAnimation(self.productionStage))
+    end
+end
+
+local function noStaticData(self)
     self:setAnimation("unpack")
     self.position = self.object:get_pos()
 
@@ -338,16 +366,28 @@ function inserter:on_activate()
     end
 end
 
+function inserter:on_activate(staticData)
+
+    local dataTable = deserialize(staticData)
+
+    if dataTable then
+        gotStaticData(self, dataTable)
+    else
+        noStaticData(self)
+    end
+end
+
+-- Automate static data serialization
 function inserter:get_staticdata()
     local tempTable = {}
 
     for key,value in pairs(self) do
         if key ~= "object" and key ~= "visual" then
-
-            write(key, value)
-            
+            tempTable[key] = value
         end
     end
+
+    return serialize(tempTable)
 end
 
 
@@ -362,7 +402,9 @@ function inserter:on_punch()
     if self.holding then
         addItem(self.position, self.holding)
     end
-    self.visual:remove()
+    if self.visual and self.visual:get_luaentity() then
+        self.visual:remove()
+    end
     self.object:remove()
 end
 
