@@ -291,24 +291,30 @@ local function searchInput(self)
                 self:updateVisual(self.holding)
                 self:setAnimation("reachForward")
                 
-                self.productionStage = self.productionStage + 1
+                return true
             end
         end
     end
+    return false
 end
 
 local productionSwitch = switch:new({
+    -- Searching container to load up
     [0] = function(self)
-        if self then
-            searchInput(self)
+        if searchInput(self) then
+            self.animationTimer = 0
+            self.productionStage = self.productionStage + 1
         end
     end,
+    -- Swinging forward, animation stage
     [1] = function(self)
         -- write("production stage 1")
     end,
+    -- Searching for a place to pick up
     [2] = function(self)
         write("production stage 2")
     end,
+    -- Swinging backward, animation stage
     [3] = function(self)
         write("production stage 3")
     end
