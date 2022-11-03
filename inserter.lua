@@ -226,7 +226,7 @@ end
 ]]
 
 -- Grab an inventory that is not empty
-local function grabFirstInventory(possibleInventorySelections, inventory)
+local function grabFirstNotEmptyInventory(possibleInventorySelections, inventory)
 
     for _,name in ipairs(possibleInventorySelections) do
         if not inventory:is_empty(name) then
@@ -275,7 +275,7 @@ local function searchInput(self)
 
         local meta = getMeta(inputPosition)
         local inventory = meta:get_inventory()
-        local inventorySelection = grabFirstInventory(possibleInventorySelections, inventory)
+        local inventorySelection = grabFirstNotEmptyInventory(possibleInventorySelections, inventory)
 
         if inventorySelection then
 
@@ -298,29 +298,90 @@ local function searchInput(self)
     return false
 end
 
+
+-- Grab an that has room for it
+local function grabFirstRoomyInventory(possibleInventorySelections, inventory, itemString)
+
+    for _,name in ipairs(possibleInventorySelections) do
+        if inventory:room_for_item(name, itemString) then
+            return name
+        end
+    end
+
+    return false
+end
+
+local function examineOutputInventories(nodeName)
+    if containers.output[nodeName] then
+        -- Return a list of elements
+        return containers.output[nodeName]
+    end
+    return false
+end
+
+local function searchOutput(self)
+    if not self.output then return end
+
+    local outputPosition = self.output
+    
+    local nodeIdentity = getNode(outputPosition)
+    local nodeName     = extractName(nodeIdentity)
+
+    --! if it's a belt, do another function to search the belt position then return here
+
+    local possibleInventorySelections  = examineOutputInventories(nodeName)
+
+    if possibleInventorySelections then
+
+        local meta = getMeta(outputPosition)
+        local inventory = meta:get_inventory()
+        local inventorySelection = grabFirstRoomyInventory(possibleInventorySelections, inventory, self.holding)
+
+        if inventorySelection then
+            
+            inventory:add_item(inventorySelection, self.holding)
+
+            self.holding = ""
+
+            self:updateVisual(self.holding)
+            self:setAnimation("reachBackward")
+            
+            return true
+            
+        end
+    end
+    return false
+end
+
 --? Leads to jumpy animation on restart, but who really cares?
 local productionSwitch = switch:new({
     -- Searching container to load up
     [0] = function(self)
         if searchInput(self) then
             self.animationTimer = 0
-            self.productionStage = self.productionStage + 1
+            self.productionStage = 1
         end
     end,
     -- Swinging forward, animation stage
     [1] = function(self)
         if self.animationTimer >= 0.75 then
             self.animationTimer = 0
-            self.productionStage = self.productionStage + 1
+            self.productionStage = 2
         end
     end,
     -- Searching for a place to unload
     [2] = function(self)
-        write("production stage 2")
+        if searchOutput(self) then
+            self.animationTimer = 0
+            self.productionStage = 3
+        end
     end,
     -- Swinging backward, animation stage
     [3] = function(self)
-        write("production stage 3")
+        if self.animationTimer >= 0.75 then
+            self.animationTimer = 0
+            self.productionStage = 0
+        end
     end
 })
 
@@ -332,7 +393,7 @@ end
 function inserter:updateVisual(newItem)
     if self.visual then
         local visualEntity = self.visual:get_luaentity()
-        if not newItem then
+        if not newItem or newItem == "" then
             visualEntity:removeItem()
         else
             visualEntity:setItem(newItem)
