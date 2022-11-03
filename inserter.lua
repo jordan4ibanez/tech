@@ -113,6 +113,8 @@ end
 --! Set some container defaults for Minetest's default game. This is debug for now.
 createContainerItem("output", "default:chest", "main")
 createContainerItem("input",  "default:chest", "main")
+createContainerItem("output", "default:chest_open", "main")
+createContainerItem("input",  "default:chest_open", "main")
 
 
 
