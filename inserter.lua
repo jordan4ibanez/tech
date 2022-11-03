@@ -298,6 +298,7 @@ local function searchInput(self)
     return false
 end
 
+--? Leads to jumpy animation on restart, but who really cares?
 local productionSwitch = switch:new({
     -- Searching container to load up
     [0] = function(self)
@@ -308,9 +309,12 @@ local productionSwitch = switch:new({
     end,
     -- Swinging forward, animation stage
     [1] = function(self)
-        -- write("production stage 1")
+        if self.animationTimer >= 0.75 then
+            self.animationTimer = 0
+            self.productionStage = self.productionStage + 1
+        end
     end,
-    -- Searching for a place to pick up
+    -- Searching for a place to unload
     [2] = function(self)
         write("production stage 2")
     end,
