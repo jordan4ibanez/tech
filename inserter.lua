@@ -280,7 +280,11 @@ local function searchInput(self)
 
     --! if it's a belt, do another function to search the belt position then return here
     if isAir(nodeName) then
-        -- Do air things
+        write("Yeah, that's some air")
+
+        return
+    elseif flatBelts:match(nodeName) then
+        write("Yeah, that's a flat belt")
 
         return
     end
