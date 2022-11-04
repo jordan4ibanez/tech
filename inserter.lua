@@ -14,6 +14,7 @@ local vec2                 = customTools.vec2
 local entityFloor          = customTools.entityFloor
 local extractName          = customTools.extractName
 local extractDirection     = customTools.extractDirection
+local debugParticle        = customTools.debugParticle
 
 -- Minetest functions
 local registerNode         = minetest.register_node
@@ -34,6 +35,8 @@ local vecMultiply          = vector.multiply
 local vecAdd               = vector.add
 local serialize            = minetest.serialize
 local deserialize          = minetest.deserialize
+local objectsInRadius      = minetest.get_objects_inside_radius
+
 -- Lua functions
 local floor                = math.floor
 local ceil                 = math.ceil
@@ -282,9 +285,13 @@ local function searchInput(self)
     if isAir(nodeName) then
         write("Yeah, that's some air")
 
+        debugParticle(self.input)
+
         return
     elseif flatBelts:match(nodeName) then
         write("Yeah, that's a flat belt")
+
+        debugParticle(self.input)
 
         return
     end
