@@ -5,6 +5,7 @@
         "addInserterContainer",
         "ItemStack",
         "dump",
-        "flatBelts"
+        "flatBelts",
+        "grabFlatBelts"
     ]
 }
