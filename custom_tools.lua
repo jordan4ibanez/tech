@@ -185,6 +185,20 @@ local function extractDirection(nodeIdentity)
     return nodeIdentity.param2
 end
 
+-- We've hit the bottom of the barrel with this one
+local noMovement = vector.zero()
+local function debugParticle(position)
+    minetest.add_particle({
+        pos = position,
+        velocity = noMovement,
+        acceleration = noMovement,
+        expirationtime = 1,
+        size = 1,
+        collisiondetection = false,
+        texture = "default_stone.png",
+    })
+end
+
 
 -- There are two ways to do this: _, _, _ or {_, _, _}. I like the second one better
 return {
@@ -201,6 +215,6 @@ return {
     vec2             = vec2,
     entityFloor      = entityFloor,
     extractName      = extractName,
-    extractDirection = extractDirection
-
+    extractDirection = extractDirection,
+    debugParticle    = debugParticle
 }
