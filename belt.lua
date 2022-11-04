@@ -3,6 +3,7 @@ local rootPath, customTools = ...
 -- Jordan4ibanez functions
 local buildString          = customTools.buildString
 local switch               = customTools.switch
+local boolSwitch           = customTools.boolSwitch
 local write                = customTools.write
 local immutable            = customTools.immutable
 local immutableIpairs      = customTools.immutableIpairs
@@ -39,8 +40,7 @@ local vecAdd               = vector.add
 local beltSpeeds = immutable({ 1, 2, 3})
 local beltAngles = immutable({-45, 0, 45})
 local beltSwitch = {}
--- Globalize this one so it can be grabbed from global scope
-flatBelts = {}
+local flatBelts = {}
 
 for _,beltSpeed in immutableIpairs(beltSpeeds) do
 for _,beltAngle in immutableIpairs(beltAngles) do
@@ -50,6 +50,10 @@ for _,beltAngle in immutableIpairs(beltAngles) do
     local nameString = buildString(
         "tech:belt_", angleConversion, "_", beltSpeed
     )
+    -- Automate ability to match things
+    if beltAngle == 0 then
+        flatBelts[nameString] = true
+    end
 
     -- Automate data extraction during runtime
     beltSwitch[nameString] = function()
@@ -85,3 +89,11 @@ end
 
 -- Finalize from table into switch
 beltSwitch = switch:new(beltSwitch)
+
+flatBelts = boolSwitch:new(flatBelts)
+
+-- Globalize it into global scope
+
+function grabFlatBelts()
+    return flatBelts
+end
