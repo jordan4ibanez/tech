@@ -238,6 +238,7 @@ local function grabFirstNotEmptyInventory(possibleInventorySelections, inventory
 
     return false
 end
+
 -- Grab the first item out of the list
 
 local function getFirstIndex(inventory, inventorySelection)
@@ -261,6 +262,13 @@ local function examineInputInventories(nodeName)
     return false
 end
 
+-- Don't bother with searching everything, player can clear the area
+local function isAir(nodeName)
+    return nodeName == "air"
+end
+
+-- Can only place on flat conveyer belts, otherwise it looks even worse
+
 local function searchInput(self)
     if not self.input then return end
 
@@ -270,6 +278,11 @@ local function searchInput(self)
     local nodeName     = extractName(nodeIdentity)
 
     --! if it's a belt, do another function to search the belt position then return here
+    if isAir(nodeName) then
+        -- Do air things
+
+        return
+    end
 
     local possibleInventorySelections  = examineInputInventories(nodeName)
 
@@ -330,6 +343,11 @@ local function searchOutput(self)
     local nodeName     = extractName(nodeIdentity)
 
     --! if it's a belt, do another function to search the belt position then return here
+
+    if isAir(nodeName) then
+        -- Do item things
+        return
+    end
 
     local possibleInventorySelections  = examineOutputInventories(nodeName)
 
