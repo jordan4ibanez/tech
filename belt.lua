@@ -39,6 +39,8 @@ local vecAdd               = vector.add
 local beltSpeeds = immutable({ 1, 2, 3})
 local beltAngles = immutable({-45, 0, 45})
 local beltSwitch = {}
+-- Globalize this one so it can be grabbed from global scope
+flatBelts = {}
 
 for _,beltSpeed in immutableIpairs(beltSpeeds) do
 for _,beltAngle in immutableIpairs(beltAngles) do
