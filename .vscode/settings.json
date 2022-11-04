@@ -4,6 +4,7 @@
         "minetest",
         "addInserterContainer",
         "ItemStack",
-        "dump"
+        "dump",
+        "flatBelts"
     ]
 }
