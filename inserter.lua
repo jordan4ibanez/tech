@@ -38,7 +38,8 @@ local deserialize          = minetest.deserialize
 local floor                = math.floor
 local ceil                 = math.ceil
 
-
+-- Functions pulled out of thin air ~spooky~
+local flatBelts            = grabFlatBelts()
 
 
 
