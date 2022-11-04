@@ -79,7 +79,7 @@ end
 -- Simpler switch
 local boolSwitch = {}
 
-function boolSwitch:new(element_table)
+function boolSwitch:new(case_table)
     local object = {
         case_table = case_table
     }
