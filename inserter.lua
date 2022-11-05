@@ -341,31 +341,27 @@ local function searchInput(self)
 
     local possibleInventorySelections = examineInputInventories(nodeName)
 
-    if possibleInventorySelections then
+    if not possibleInventorySelections then return false end
 
-        local meta = getMeta(inputPosition)
-        local inventory = meta:get_inventory()
-        local inventorySelection = grabFirstNotEmptyInventory(possibleInventorySelections, inventory)
+    local meta = getMeta(inputPosition)
+    local inventory = meta:get_inventory()
+    local inventorySelection = grabFirstNotEmptyInventory(possibleInventorySelections, inventory)
 
-        if inventorySelection then
+    if not inventorySelection then return false end
 
-            local selectedIndex = getFirstIndex(inventory, inventorySelection)
-            
-            if selectedIndex then
-                
-                local stack = inventory:get_stack(inventorySelection, selectedIndex):take_item(1)
+    local selectedIndex = getFirstIndex(inventory, inventorySelection)
+    
+    if not selectedIndex then return false end
+        
+    local stack = inventory:get_stack(inventorySelection, selectedIndex):take_item(1)
 
-                inventory:remove_item(inventorySelection, stack)
+    inventory:remove_item(inventorySelection, stack)
 
-                self.holding = stack:get_name()
-                self:updateVisual(self.holding)
-                self:setAnimation("reachForward")
-                
-                return true
-            end
-        end
-    end
-    return false
+    self.holding = stack:get_name()
+    self:updateVisual(self.holding)
+    self:setAnimation("reachForward")
+    
+    return true
 end
 
 
