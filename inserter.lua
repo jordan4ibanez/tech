@@ -319,8 +319,6 @@ local function searchInput(self)
     --! if it's a belt, do another function to search the belt position then return here
     if isAir(nodeName) then
 
-        debugParticle(self.input)
-
         local gottenItemString = grabInputFromPosition(self.input, 0.5)
 
         if gottenItemString then
@@ -341,7 +339,7 @@ local function searchInput(self)
         return
     end
 
-    local possibleInventorySelections  = examineInputInventories(nodeName)
+    local possibleInventorySelections = examineInputInventories(nodeName)
 
     if possibleInventorySelections then
 
