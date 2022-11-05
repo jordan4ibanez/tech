@@ -360,7 +360,7 @@ local function searchInput(self)
     self.holding = stack:get_name()
     self:updateVisual(self.holding)
     self:setAnimation("reachForward")
-    
+
     return true
 end
 
@@ -386,7 +386,7 @@ local function examineOutputInventories(nodeName)
 end
 
 local function searchOutput(self)
-    if not self.output then return end
+    if not self.output then return false end
 
     local outputPosition = self.output
     
@@ -396,32 +396,31 @@ local function searchOutput(self)
     --! if it's a belt, do another function to search the belt position then return here
 
     if isAir(nodeName) then
-        -- Do item things
-        return
+        
+
+        return true
     end
 
     local possibleInventorySelections  = examineOutputInventories(nodeName)
 
-    if possibleInventorySelections then
+    if not possibleInventorySelections then return false end
 
-        local meta = getMeta(outputPosition)
-        local inventory = meta:get_inventory()
-        local inventorySelection = grabFirstRoomyInventory(possibleInventorySelections, inventory, self.holding)
+    local meta = getMeta(outputPosition)
+    local inventory = meta:get_inventory()
+    local inventorySelection = grabFirstRoomyInventory(possibleInventorySelections, inventory, self.holding)
 
-        if inventorySelection then
-            
-            inventory:add_item(inventorySelection, self.holding)
 
-            self.holding = ""
+    if not inventorySelection then return false end
+        
+    inventory:add_item(inventorySelection, self.holding)
 
-            self:updateVisual(self.holding)
-            self:setAnimation("reachBackward")
-            
-            return true
-            
-        end
-    end
-    return false
+    self.holding = ""
+
+    self:updateVisual(self.holding)
+    self:setAnimation("reachBackward")
+    
+    return true
+    
 end
 
 --? Leads to jumpy animation on restart, but who really cares?
