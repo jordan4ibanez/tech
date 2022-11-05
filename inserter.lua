@@ -271,6 +271,41 @@ local function isAir(nodeName)
     return nodeName == "air"
 end
 
+-- Grab the first thing it sees
+local function grabInputFromPosition(position, radius)
+    
+    local gottenObject = objectsInRadius(position, radius)
+    
+    if not gottenObject then return false end
+    
+    if #gottenObject <= 0 then return false end
+    
+    gottenObject = gottenObject[1]
+    
+    local gottenEntity = gottenObject:get_luaentity()
+
+    if gottenEntity.name ~= "__builtin:item" then return false end
+    
+    local itemString = gottenEntity.itemstring
+
+    local stack = ItemStack(itemString)
+
+    itemString = stack:get_name()
+    
+    local count = stack:get_count()
+
+    count = count - 1
+
+    if count <= 0 then
+        gottenObject:remove()
+    else
+        stack:set_count(count)
+        gottenEntity:set_item(stack)
+    end
+
+    return gottenEntity.itemString
+end
+
 -- Can only place on flat conveyer belts, otherwise it looks even worse
 
 local function searchInput(self)
@@ -283,15 +318,20 @@ local function searchInput(self)
 
     --! if it's a belt, do another function to search the belt position then return here
     if isAir(nodeName) then
-        write("Yeah, that's some air")
+        -- write("Yeah, that's some air")
 
         debugParticle(self.input)
+
+        grabInputFromPosition(self.input, 0.5)
 
         return
     elseif flatBelts:match(nodeName) then
         write("Yeah, that's a flat belt")
 
         debugParticle(self.input)
+
+        --! This needs to be adjusted: Tune radius, tune position
+        grabInputFromPosition(self.input, 0.5)
 
         return
     end
