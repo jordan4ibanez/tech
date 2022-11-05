@@ -273,6 +273,8 @@ end
 
 -- Grab the first thing it sees
 local function grabInputFromPosition(position, radius)
+
+    write("POLLING INPUT!")
     
     local gottenObject = objectsInRadius(position, radius)
     
@@ -284,7 +286,7 @@ local function grabInputFromPosition(position, radius)
     
     local gottenEntity = gottenObject:get_luaentity()
 
-    if gottenEntity.name ~= "__builtin:item" then return false end
+    if not gottenEntity.name or gottenEntity.name ~= "__builtin:item" then return false end
     
     local itemString = gottenEntity.itemstring
 
@@ -309,7 +311,8 @@ end
 -- Can only place on flat conveyer belts, otherwise it looks even worse
 
 local function searchInput(self)
-    if not self.input then return end
+
+    if not self.input then return false end
 
     local inputPosition = self.input
     
@@ -321,11 +324,11 @@ local function searchInput(self)
 
         local gottenItemString = grabInputFromPosition(self.input, 0.5)
 
-        if gottenItemString then
-            self.holding = gottenItemString
-            self:updateVisual(self.holding)
-            self:setAnimation("reachForward")
-        end
+        if not gottenItemString then return false end
+
+        self.holding = gottenItemString
+        self:updateVisual(self.holding)
+        self:setAnimation("reachForward")
 
         return true
     elseif flatBelts:match(nodeName) then
@@ -336,7 +339,7 @@ local function searchInput(self)
         --! This needs to be adjusted: Tune radius, tune position
         grabInputFromPosition(self.input, 0.5)
 
-        return
+        return false
     end
 
     local possibleInventorySelections = examineInputInventories(nodeName)
@@ -397,7 +400,12 @@ local function searchOutput(self)
 
     if isAir(nodeName) then
         
+        addItem(outputPosition, self.holding)
 
+        self.holding = ""
+
+        self:updateVisual(self.holding)
+        self:setAnimation("reachBackward")
         return true
     end
 
@@ -427,6 +435,7 @@ end
 local productionSwitch = switch:new({
     -- Searching container to load up
     [0] = function(self)
+        write("stage 0")
         if searchInput(self) then
             self.animationTimer = 0
             self.productionStage = 1
@@ -434,6 +443,7 @@ local productionSwitch = switch:new({
     end,
     -- Swinging forward, animation stage
     [1] = function(self)
+        write("stage 1")
         if self.animationTimer >= 0.75 then
             self.animationTimer = 0
             self.productionStage = 2
@@ -441,6 +451,7 @@ local productionSwitch = switch:new({
     end,
     -- Searching for a place to unload
     [2] = function(self)
+        write("stage 2")
         if searchOutput(self) then
             self.animationTimer = 0
             self.productionStage = 3
@@ -448,6 +459,7 @@ local productionSwitch = switch:new({
     end,
     -- Swinging backward, animation stage
     [3] = function(self)
+        write("stage 3")
         if self.animationTimer >= 0.75 then
             self.animationTimer = 0
             self.productionStage = 0
