@@ -120,6 +120,15 @@ createContainerItem("input",  "default:chest", "main")
 createContainerItem("output", "default:chest_open", "main")
 createContainerItem("input",  "default:chest_open", "main")
 
+createContainerItem("output", "default:furnace"       , "fuel")
+createContainerItem("output", "default:furnace_active", "fuel")
+createContainerItem("output", "default:furnace"       , "src" )
+createContainerItem("output", "default:furnace_active", "src" )
+
+createContainerItem("input", "default:furnace"       , "dst")
+createContainerItem("input", "default:furnace_active", "dst")
+
+
 
 
 local unpackVec2          = immutable(vec2(1,20))
