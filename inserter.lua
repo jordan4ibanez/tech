@@ -303,7 +303,7 @@ local function grabInputFromPosition(position, radius)
         gottenEntity:set_item(stack)
     end
 
-    return gottenEntity.itemString
+    return itemString
 end
 
 -- Can only place on flat conveyer belts, otherwise it looks even worse
@@ -318,13 +318,18 @@ local function searchInput(self)
 
     --! if it's a belt, do another function to search the belt position then return here
     if isAir(nodeName) then
-        -- write("Yeah, that's some air")
 
         debugParticle(self.input)
 
-        grabInputFromPosition(self.input, 0.5)
+        local gottenItemString = grabInputFromPosition(self.input, 0.5)
 
-        return
+        if gottenItemString then
+            self.holding = gottenItemString
+            self:updateVisual(self.holding)
+            self:setAnimation("reachForward")
+        end
+
+        return true
     elseif flatBelts:match(nodeName) then
         write("Yeah, that's a flat belt")
 
