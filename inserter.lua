@@ -273,8 +273,6 @@ end
 
 -- Grab the first thing it sees
 local function grabInputFromPosition(position, radius)
-
-    write("POLLING INPUT!")
     
     local gottenObject = objectsInRadius(position, radius)
     
