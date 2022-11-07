@@ -33,6 +33,7 @@ local newVec               = vector.new
 local zeroVec              = vector.zero
 local vecMultiply          = vector.multiply
 local vecAdd               = vector.add
+local vecRound             = vector.round
 local serialize            = minetest.serialize
 local deserialize          = minetest.deserialize
 local objectsInRadius      = minetest.get_objects_inside_radius
@@ -80,6 +81,10 @@ local containers = {
     input  = {},
     output = {},
 }
+
+local function getLane(position, goal, rotation)
+    
+end
 
 local function tableContains(table, element)
     for _,value in ipairs(table) do
@@ -282,25 +287,25 @@ end
 
 -- Grab the first thing it sees
 local function grabInputFromPosition(position, radius)
-    
+
     local gottenObject = objectsInRadius(position, radius)
-    
+
     if not gottenObject then return false end
-    
+
     if #gottenObject <= 0 then return false end
-    
+
     gottenObject = gottenObject[1]
-    
+
     local gottenEntity = gottenObject:get_luaentity()
 
     if not gottenEntity.name or gottenEntity.name ~= "__builtin:item" then return false end
-    
+
     local itemString = gottenEntity.itemstring
 
     local stack = ItemStack(itemString)
 
     itemString = stack:get_name()
-    
+
     local count = stack:get_count()
 
     count = count - 1
@@ -322,7 +327,7 @@ local function searchInput(self)
     if not self.input then return false end
 
     local inputPosition = self.input
-    
+
     local nodeIdentity = getNode(inputPosition)
     local nodeName     = extractName(nodeIdentity)
 
@@ -399,21 +404,37 @@ local function searchOutput(self)
     if not self.output then return false end
 
     local outputPosition = self.output
-    
+
     local nodeIdentity = getNode(outputPosition)
     local nodeName     = extractName(nodeIdentity)
 
     --! if it's a belt, do another function to search the belt position then return here
 
     if isAir(nodeName) then
-        
+
         addItem(outputPosition, self.holding)
 
         self.holding = ""
 
         self:updateVisual(self.holding)
         self:setAnimation("reachBackward")
+
         return true
+
+    elseif flatBelts:match(nodeName) then
+
+        write("Yeah, that's a flat belt")
+
+        write(dump(self.position))
+
+        debugParticle(self.position)
+        debugParticle(self.output)
+
+        --! search for a free position
+
+
+
+        return false
     end
 
     local possibleInventorySelections  = examineOutputInventories(nodeName)
@@ -426,23 +447,22 @@ local function searchOutput(self)
 
 
     if not inventorySelection then return false end
-        
+
     inventory:add_item(inventorySelection, self.holding)
 
     self.holding = ""
 
     self:updateVisual(self.holding)
     self:setAnimation("reachBackward")
-    
+
     return true
-    
+
 end
 
 --? Leads to jumpy animation on restart, but who really cares?
 local productionSwitch = switch:new({
     -- Searching container to load up
     [0] = function(self)
-        write("stage 0")
         if searchInput(self) then
             self.animationTimer = 0
             self.productionStage = 1
@@ -450,7 +470,6 @@ local productionSwitch = switch:new({
     end,
     -- Swinging forward, animation stage
     [1] = function(self)
-        write("stage 1")
         if self.animationTimer >= 0.75 then
             self.animationTimer = 0
             self.productionStage = 2
@@ -458,7 +477,6 @@ local productionSwitch = switch:new({
     end,
     -- Searching for a place to unload
     [2] = function(self)
-        write("stage 2")
         if searchOutput(self) then
             self.animationTimer = 0
             self.productionStage = 3
@@ -466,7 +484,6 @@ local productionSwitch = switch:new({
     end,
     -- Swinging backward, animation stage
     [3] = function(self)
-        write("stage 3")
         if self.animationTimer >= 0.75 then
             self.animationTimer = 0
             self.productionStage = 0
@@ -499,6 +516,7 @@ local function gotStaticData(self, dataTable)
     end
 
     local itemEntityVisual = addEntity(self.position, "tech:inserterVisual", "new")
+
     if itemEntityVisual then
 
         itemEntityVisual:set_attach(self.object, "grabber", newVec(0,4,0), zeroVec(), false)
@@ -517,7 +535,7 @@ end
 
 local function noStaticData(self)
     self:setAnimation("unpack")
-    self.position = self.object:get_pos()
+    self.position = vecRound(self.object:get_pos())
 
     local itemEntityVisual = addEntity(self.position, "tech:inserterVisual", "new")
     if itemEntityVisual then
@@ -614,6 +632,7 @@ function inserterItem:on_place(placer, pointedThing)
                 0
             )
         )
+
         local frontDirection = fourDirToDir(fourDir)
 
         above.y = ceil(above.y)
