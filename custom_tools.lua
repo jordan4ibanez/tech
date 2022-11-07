@@ -95,6 +95,26 @@ function boolSwitch:match(case)
     return false
 end
 
+-- Simpler switch, don't feel like rewriting everything
+local simpleSwitch = {}
+
+function simpleSwitch:new(case_table)
+    local object = {
+        case_table = case_table
+    }
+    setmetatable(object, self)
+    self.__index = self;
+    return immutable(object)
+end
+
+function simpleSwitch:match(case)
+    if self.case_table[case] then
+        return self.case_table[case]
+    end
+    return nil
+end
+
+
 
 -- I wrote this because I am very lazy
 
@@ -204,6 +224,7 @@ end
 return {
     switch           = switch,
     boolSwitch       = boolSwitch,
+    simpleSwitch     = simpleSwitch,
     write            = write,
     immutable        = immutable,
     immutableIpairs  = immutableIpairs,
