@@ -3,6 +3,7 @@ local rootPath, customTools = ...
 -- Jordan4ibanez functions
 local buildString          = customTools.buildString
 local switch               = customTools.switch
+local simpleSwitch         = customTools.simpleSwitch
 local write                = customTools.write
 local immutable            = customTools.immutable
 local immutableIpairs      = customTools.immutableIpairs
@@ -34,6 +35,7 @@ local zeroVec              = vector.zero
 local vecMultiply          = vector.multiply
 local vecAdd               = vector.add
 local vecRound             = vector.round
+local vecDirection         = vector.direction
 local serialize            = minetest.serialize
 local deserialize          = minetest.deserialize
 local objectsInRadius      = minetest.get_objects_inside_radius
@@ -83,7 +85,11 @@ local containers = {
 }
 
 local function getLane(position, goal, rotation)
-    
+    local internalDirection = vecDirection(position, goal)
+    local internalRotation = dirToFourDir(internalDirection)
+
+    write(internalRotation)
+
 end
 
 local function tableContains(table, element)
@@ -407,6 +413,7 @@ local function searchOutput(self)
 
     local nodeIdentity = getNode(outputPosition)
     local nodeName     = extractName(nodeIdentity)
+    local nodeRotation = extractDirection(nodeIdentity)
 
     --! if it's a belt, do another function to search the belt position then return here
 
@@ -423,12 +430,11 @@ local function searchOutput(self)
 
     elseif flatBelts:match(nodeName) then
 
-        write("Yeah, that's a flat belt")
-
-        write(dump(self.position))
-
         debugParticle(self.position)
         debugParticle(self.output)
+
+        local lane = getLane(self.position, self.output, nodeRotation)
+
 
         --! search for a free position
 
