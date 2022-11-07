@@ -79,11 +79,6 @@ local flatBelts            = grabFlatBelts()
 
 ]]
 
-local containers = {
-    input  = {},
-    output = {},
-}
-
 local function getLane(position, goal, rotation)
     local internalDirection = vecDirection(position, goal)
     local internalRotation = dirToFourDir(internalDirection)
@@ -91,6 +86,11 @@ local function getLane(position, goal, rotation)
     write(internalRotation)
 
 end
+
+local containers = {
+    input  = {},
+    output = {},
+}
 
 local function tableContains(table, element)
     for _,value in ipairs(table) do
@@ -435,6 +435,10 @@ local function searchOutput(self)
 
         local lane = getLane(self.position, self.output, nodeRotation)
 
+        if lane then
+            --* Search for room
+            --* Do lane things
+        end
 
         --! search for a free position
 
