@@ -79,11 +79,29 @@ local flatBelts            = grabFlatBelts()
 
 ]]
 
+-- Comment is the node rotation
+local laneSwitch = simpleSwitch:new({
+    -- 0
+    ["1 2"] = 1,
+    ["3 2"] = 2,
+    -- 1
+    ["2 3"] = 1,
+    ["0 3"] = 2,
+    -- 2
+    ["3 0"] = 1,
+    ["1 0"] = 2,
+    -- 3
+    ["0 1"] = 1,
+    ["2 1"] = 2
+})
+
 local function getLane(position, goal, rotation)
     local internalDirection = vecDirection(position, goal)
     local internalRotation = dirToFourDir(internalDirection)
 
-    write(internalRotation)
+    local case = buildString(internalRotation, " ", rotation)
+
+    return laneSwitch:match(case)
 
 end
 
