@@ -50,6 +50,7 @@ local floor = math.floor
 
 -- Functions pulled out of thin air ~spooky~
 local beltSwitch = grabBeltSwitch()
+local turnBeltSwitch = grabTurnBeltSwitch()
 
 --! Beginning of belt item object
 
@@ -110,7 +111,6 @@ local directionSwitch = simpleSwitch:new({
     [3] = immutable(vector.new( 1, 0, 0)),
 })
 
-
 -- Comment is the node rotation
 local directionChangeSwitch = simpleSwitch:new({
     -- 0
@@ -132,6 +132,39 @@ local function getDirectionChangeLane(newRotation, currentRotation)
     return directionChangeSwitch:match(case)
 end
 
+
+-- Comment is the input belt's rotation
+-- Value is movement amount, inner or outer, true is inner, false is outer
+local inner = true
+local outer = false
+local turnChangeSwitch = simpleSwitch:new({
+    --0
+    ["3 2 1"] = outer,
+    ["1 2 1"] = inner,
+    ["3 2 2"] = inner,
+    ["1 2 2"] = outer,
+    -- 1
+    ["0 3 1"] = outer,
+    ["2 3 1"] = inner,
+    ["0 3 2"] = inner,
+    ["2 3 2"] = outer,
+    -- 2
+    ["1 0 1"] = outer,
+    ["3 0 1"] = inner,
+    ["1 0 2"] = inner,
+    ["3 0 2"] = outer,
+    -- 3
+    ["2 1 1"] = outer,
+    ["0 1 1"] = inner,
+    ["2 1 2"] = inner,
+    ["0 1 2"] = outer,
+})
+
+local function getDirectionTurn(newRotation, currentRotation, currentLane)
+    local case = buildString(currentRotation, " ", newRotation, " ", currentLane)
+    return turnChangeSwitch:match(case)
+end
+
 function beltItem:movement(object)
 
     local position = object:get_pos()
@@ -147,8 +180,7 @@ function beltItem:movement(object)
         local velocity = vecMultiply(direction, beltSpeed)
         local newPosition = vecAdd(position, velocity)
 
-
-        --* Check if changing direction
+        
         local frontNodeIdentity = getNode(newPosition)
         local frontBeltName = extractName(frontNodeIdentity)
 
@@ -172,11 +204,25 @@ function beltItem:movement(object)
             return true
         end
 
+        --* Check if going into a turn
+        local turning = false
+        if turnBeltSwitch:match(frontBeltName) then
+
+            local newLane = getDirectionTurn(beltDir, frontBeltDir, self.lane)
+
+            if newLane then
+                object:remove()
+                return
+            end
+            turning = true
+        end
+        
+
         local turned = false
         local newLane = 0
 
         --* Check if turning straight to straight
-        if frontBeltDir ~= beltDir then
+        if not turning and frontBeltDir ~= beltDir then
 
             newLane = getDirectionChangeLane(beltDir, frontBeltDir)
 
