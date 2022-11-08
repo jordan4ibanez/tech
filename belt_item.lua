@@ -207,6 +207,10 @@ function beltItem:movement(object)
             return true
         end
 
+
+
+
+
         --* Check if going into a turn
         local turning = false
         local turned = false
@@ -265,6 +269,8 @@ function beltItem:movement(object)
 
             turned = true
         end
+
+        ::turnLogicSkip::
 
         --* Check if there is enough room
         if not findRoom(newPosition, 0.2) then return false end
