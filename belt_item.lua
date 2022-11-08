@@ -171,130 +171,146 @@ end
 function beltItem:movement(object)
 
     local position = object:get_pos()
-    local nodeIdentity = getNode(position)
+    local nodeIdentity = getNode(newVec(
+        position.x, position.y - 0.5, position.z
+    ))
     local beltName = extractName(nodeIdentity)
     local beltDir  = extractDirection(nodeIdentity)
     local beltSpeed, beltAngle = beltSwitch:match(beltName)
     
-    if beltSpeed then
+    if not beltSpeed then
+        addItem(position, self.itemString)
+        object:remove()
+        return true
+    end
 
-        local direction = directionSwitch:match(beltDir, object)
-        beltSpeed = beltSpeed / 30
-        local velocity = vecMultiply(direction, beltSpeed)
-        local newPosition = vecAdd(position, velocity)
-        local frontNodeIdentity = getNode(newPosition)
-        local frontBeltName = extractName(frontNodeIdentity)
+    local direction = directionSwitch:match(beltDir, object)
+    beltSpeed = beltSpeed / 30
+    local velocity = vecMultiply(direction, beltSpeed)
+    local newPosition = vecAdd(position, velocity)
+    local frontNodeIdentity = getNode(newPosition)
+    local frontBeltName = extractName(frontNodeIdentity)
+    local frontBeltSpeed, frontBeltAngle = beltSwitch:match(frontBeltName)
 
-        local frontBeltSpeed, frontBeltAngle = beltSwitch:match(frontBeltName)
-
-        if not frontBeltSpeed then return false end
-
-        local frontBeltDir = extractDirection(frontNodeIdentity)
-
-        local function findRoom(searchingPosition, radius)
-            local objects = objectsInRadius(searchingPosition, radius)
-            for _,gottenObject in ipairs(objects) do
-                --! If you have an error here, complain to core devs about luajit versioning
-                if not gottenObject then goto continue end
-                if isPlayer(gottenObject) then goto continue end
-                local gottenEntity = gottenObject:get_luaentity()
-                if not gottenEntity then goto continue end
-                if not gottenEntity.name then goto continue end
-                if gottenEntity == self then goto continue end
-                if gottenEntity.name == "tech:beltItem" then return false end
-                ::continue::
-            end
-            return true
-        end
+    
+    
 
 
+    if not frontBeltSpeed then return false end
 
+    -- Upward belt logic flow
+    local goingUp = false
 
-
-        --* Check if going into a turn
-        local turning = false
-        local turned = false
-        local newLane = 0
-
-        if turnBeltSwitch:match(frontBeltName) then
-
-            local turnApex = getDirectionTurn(beltDir, frontBeltDir, self.lane)
-
-            if not turnApex then goto quickExit end
-
-            local position1 = vecRound(position)
-            local position2 = vecRound(newPosition)
-
-            local headingDirection = vecDirection(position1, position2)
-
-            if turnApex == outer then
-
-                if headingDirection.x ~= 0 then
-                    newPosition.x = position1.x + (headingDirection.x * 1.25)
-                elseif headingDirection.z ~= 0 then
-                    newPosition.z = position1.z + (headingDirection.z * 1.25)
-                end
-
-            else
-                if headingDirection.x ~= 0 then
-                    newPosition.x = position1.x + (headingDirection.x * 0.75)
-                elseif headingDirection.z ~= 0 then
-                    newPosition.z = position1.z + (headingDirection.z * 0.75)
-                end
-            end
-            
-            turned = true
-            turning = true
-            newLane = self.lane
-        end
-
-        ::quickExit::
+    if frontBeltAngle == 45 or beltAngle == 45 then
+        newPosition.y = newPosition.y + beltSpeed
+    end
         
 
-        --* Check if turning straight to straight
-        if not turning and frontBeltDir ~= beltDir and not turnBeltSwitch:match(frontBeltName) and flatBeltSwitch:match(frontBeltName) then
 
-            newLane = getDirectionChangeLane(beltDir, frontBeltDir)
 
-            local position1 = vecRound(position)
-            local position2 = vecRound(newPosition)
 
-            local headingDirection = vecDirection(position1, position2)
+    
 
+    local function findRoom(searchingPosition, radius)
+        local objects = objectsInRadius(searchingPosition, radius)
+        for _,gottenObject in ipairs(objects) do
+            --! If you have an error here, complain to core devs about luajit versioning
+            if not gottenObject then goto continue end
+            if isPlayer(gottenObject) then goto continue end
+            local gottenEntity = gottenObject:get_luaentity()
+            if not gottenEntity then goto continue end
+            if not gottenEntity.name then goto continue end
+            if gottenEntity == self then goto continue end
+            if gottenEntity.name == "tech:beltItem" then return false end
+            ::continue::
+        end
+        return true
+    end
+
+
+    local turning = false
+    local turned = false
+    local newLane = 0
+
+    
+    local frontBeltDir = extractDirection(frontNodeIdentity)
+
+
+    --* Check if going into a turn
+
+    if turnBeltSwitch:match(frontBeltName) then
+
+        local turnApex = getDirectionTurn(beltDir, frontBeltDir, self.lane)
+
+        if not turnApex then goto quickExit end
+
+        local position1 = vecRound(position)
+        local position2 = vecRound(newPosition)
+
+        local headingDirection = vecDirection(position1, position2)
+
+        if turnApex == outer then
+
+            if headingDirection.x ~= 0 then
+                newPosition.x = position1.x + (headingDirection.x * 1.25)
+            elseif headingDirection.z ~= 0 then
+                newPosition.z = position1.z + (headingDirection.z * 1.25)
+            end
+
+        else
             if headingDirection.x ~= 0 then
                 newPosition.x = position1.x + (headingDirection.x * 0.75)
             elseif headingDirection.z ~= 0 then
                 newPosition.z = position1.z + (headingDirection.z * 0.75)
             end
-
-            turned = true
         end
-
-        ::turnLogicSkip::
-
-        --* Check if there is enough room
-        if not findRoom(newPosition, 0.2) then return false end
         
-        if turned then
-            local rotation = object:get_yaw()
-            if rotation ~= 0 then
-                rotation = 0
-            else
-                rotation = math.pi / 2
-            end
+        turned = true
+        turning = true
+        newLane = self.lane
+    end
 
-            object:set_yaw(rotation)
+    ::quickExit::
+    
 
-            self:setLane(newLane)
+    --* Check if turning straight to straight
+    if not turning and frontBeltDir ~= beltDir and not turnBeltSwitch:match(frontBeltName) and flatBeltSwitch:match(frontBeltName) then
+
+        newLane = getDirectionChangeLane(beltDir, frontBeltDir)
+
+        local position1 = vecRound(position)
+        local position2 = vecRound(newPosition)
+
+        local headingDirection = vecDirection(position1, position2)
+
+        if headingDirection.x ~= 0 then
+            newPosition.x = position1.x + (headingDirection.x * 0.75)
+        elseif headingDirection.z ~= 0 then
+            newPosition.z = position1.z + (headingDirection.z * 0.75)
         end
 
-        object:move_to(newPosition, false)
-    -- Not on a belt
-    else
-        addItem(position, self.itemString)
-        object:remove()
-        return true
+        turned = true
     end
+
+    ::turnLogicSkip::
+
+    --* Check if there is enough room
+    if not findRoom(newPosition, 0.2) then return false end
+    
+    if turned then
+        local rotation = object:get_yaw()
+        if rotation ~= 0 then
+            rotation = 0
+        else
+            rotation = math.pi / 2
+        end
+
+        object:set_yaw(rotation)
+
+        self:setLane(newLane)
+    end
+
+    object:move_to(newPosition, false)
 end
 
 
