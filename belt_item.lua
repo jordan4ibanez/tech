@@ -249,7 +249,7 @@ function beltItem:movement(object)
 
         --* Check if turning straight to straight
         
-        if not turning and frontBeltDir ~= beltDir and not turnBeltSwitch:match(frontBeltName) then
+        if not turning and frontBeltDir ~= beltDir and not turnBeltSwitch:match(frontBeltName) and flatBeltSwitch:match(frontBeltName) then
 
             newLane = getDirectionChangeLane(beltDir, frontBeltDir)
 
