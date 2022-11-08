@@ -454,16 +454,20 @@ local function searchOutput(self)
         if not lane then return false end
         local positionAdjustment = vecMultiply(internalDirection, 0.25)
         local lanePosition = vecSubtract(self.output, positionAdjustment)
-        if not findRoom(lanePosition, 0.1) then return false end
+        if not findRoom(lanePosition, 0.2) then return false end
 
         local beltEntity = addEntity(lanePosition, "tech:beltItem")
 
+        if not beltEntity then return false end
+        
+        beltEntity = beltEntity:get_luaentity()
 
+        beltEntity:setItem(self.holding)
 
+        self.holding = ""
 
-        --! search for a free position
-
-
+        self:updateVisual(self.holding)
+        self:setAnimation("reachBackward")
 
         return true
     end
