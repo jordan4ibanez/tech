@@ -173,9 +173,7 @@ function beltItem:movement(object)
 
     local position = object:get_pos()
 
-    local nodeIdentity = getNode(newVec(
-        position.x, position.y - 0.5, position.z
-    ))
+    local nodeIdentity = getNode(position)
     local beltName = extractName(nodeIdentity)
     local beltDir  = extractDirection(nodeIdentity)
     local beltSpeed, beltAngle = beltSwitch:match(beltName)
@@ -183,7 +181,7 @@ function beltItem:movement(object)
     if beltSpeed then
 
         local direction = directionSwitch:match(beltDir, object)
-        beltSpeed = beltSpeed / 32
+        beltSpeed = beltSpeed / 40
         local velocity = vecMultiply(direction, beltSpeed)
         local newPosition = vecAdd(position, velocity)
 
@@ -198,38 +196,10 @@ function beltItem:movement(object)
         end
         
         local frontNodeIdentity = getNode(newVec(
-            newPosition.x, newPosition.y - 0.5, newPosition.z
+            newPosition.x, newPosition.y, newPosition.z
         ))
 
         local frontBeltName = extractName(frontNodeIdentity)
-        -- Downward belts need a "hook" to allow the initial entry point
-        if not beltSwitch:match(frontBeltName) then
-            if beltAngle == 45 then
-                frontNodeIdentity = getNode(newVec(
-                    newPosition.x, newPosition.y - 0.25, newPosition.z
-                ))
-                frontBeltName = extractName(frontNodeIdentity)
-                if not beltSwitch:match(frontBeltName) then return false end
-                newPosition.y = newPosition.y - 0.1
-            elseif beltAngle == 0 then
-                frontNodeIdentity = getNode(newVec(
-                    newPosition.x, newPosition.y - 0.75, newPosition.z
-                ))
-                frontBeltName = extractName(frontNodeIdentity)
-                if not beltSwitch:match(frontBeltName) then return false end
-                newPosition.y = newPosition.y - 0.1
-            elseif beltAngle == -45 then
-                frontNodeIdentity = getNode(newVec(
-                    newPosition.x, newPosition.y + 0.25, newPosition.z
-                ))
-                frontBeltName = extractName(frontNodeIdentity)
-                if not beltSwitch:match(frontBeltName) then return false end
-                newPosition.y = floor(newPosition.y + 0.1)
-            else
-                return false
-            end
-        end
-
         local frontBeltDir = extractDirection(frontNodeIdentity)
 
         local function findRoom(searchingPosition, radius)
