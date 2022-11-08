@@ -455,14 +455,17 @@ local function searchOutput(self)
         local positionAdjustment = vecMultiply(internalDirection, 0.25)
         local lanePosition = vecSubtract(self.output, positionAdjustment)
         if not findRoom(lanePosition, 0.1) then return false end
-        write("ready to place")
+
+        local beltEntity = addEntity(lanePosition, "tech:beltItem")
+
+
 
 
         --! search for a free position
 
 
 
-        return false
+        return true
     end
 
     local possibleInventorySelections  = examineOutputInventories(nodeName)
