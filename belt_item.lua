@@ -182,12 +182,12 @@ function beltItem:movement(object)
         beltSpeed = beltSpeed / 30
         local velocity = vecMultiply(direction, beltSpeed)
         local newPosition = vecAdd(position, velocity)
-
-        
         local frontNodeIdentity = getNode(newPosition)
         local frontBeltName = extractName(frontNodeIdentity)
 
-        if not beltSwitch:match(frontBeltName) then return false end
+        local frontBeltSpeed, frontBeltAngle = beltSwitch:match(frontBeltName)
+
+        if not frontBeltSpeed then return false end
 
         local frontBeltDir = extractDirection(frontNodeIdentity)
 
@@ -248,7 +248,6 @@ function beltItem:movement(object)
         
 
         --* Check if turning straight to straight
-        
         if not turning and frontBeltDir ~= beltDir and not turnBeltSwitch:match(frontBeltName) and flatBeltSwitch:match(frontBeltName) then
 
             newLane = getDirectionChangeLane(beltDir, frontBeltDir)
