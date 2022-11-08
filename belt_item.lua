@@ -170,11 +170,8 @@ function beltItem:movement(object)
 
         local turned = false
 
+        --* Check if turning straight to straight
         if frontBeltDir ~= beltDir then
-            -- write("change direction")
-            local newLane = getDirectionChangeLane(beltDir, frontBeltDir)
-
-            write("new lane: ", newLane)
 
             local position1 = vecRound(position)
             local position2 = vecRound(newPosition)
