@@ -63,6 +63,7 @@ local beltItem = {
         textures = {""},
         is_visible = false,
     },
+    lane = 0,
     itemString = "",
     direction = 0,
     stopped = false,
@@ -97,6 +98,9 @@ function beltItem:removeItem()
     })
 end
 
+function beltItem:setLane(lane)
+    self.lane = lane
+end
 
 
 local directionSwitch = simpleSwitch:new({
@@ -169,9 +173,12 @@ function beltItem:movement(object)
         end
 
         local turned = false
+        local newLane = 0
 
         --* Check if turning straight to straight
         if frontBeltDir ~= beltDir then
+
+            newLane = getDirectionChangeLane(beltDir, frontBeltDir)
 
             local position1 = vecRound(position)
             local position2 = vecRound(newPosition)
@@ -201,6 +208,8 @@ function beltItem:movement(object)
             end
 
             object:set_yaw(rotation)
+
+            self:setLane(newLane)
         end
 
         object:move_to(newPosition, false)
