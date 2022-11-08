@@ -196,8 +196,8 @@ function beltItem:movement(object)
         if not findRoom(newPosition, 0.2) then return false end
         
         if turned then
-            local rotation = floor(object:get_yaw() * 100000)
-            if rotation == 157079 then
+            local rotation = object:get_yaw()
+            if rotation ~= 0 then
                 rotation = 0
             else
                 rotation = math.pi / 2
