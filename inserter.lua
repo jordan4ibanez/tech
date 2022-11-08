@@ -41,6 +41,7 @@ local vecDirection         = vector.direction
 local serialize            = minetest.serialize
 local deserialize          = minetest.deserialize
 local objectsInRadius      = minetest.get_objects_inside_radius
+local isPlayer             = minetest.is_player
 
 -- Lua functions
 local floor                = math.floor
@@ -435,10 +436,15 @@ local function searchOutput(self)
 
         local function findRoom(position, radius)
             local objects = objectsInRadius(position, radius)
-
             for _,object in ipairs(objects) do
-                write(dump(object))
-
+                --! If you have an error here, complain to core devs about luajit versioning
+                if not object then goto continue end
+                if isPlayer(object) then goto continue end
+                local gottenEntity = object:get_luaentity()
+                if not gottenEntity then goto continue end
+                if not gottenEntity.name then goto continue end
+                if gottenEntity.name == "tech:beltItem" then return false end
+                ::continue::
             end
             return true
         end
@@ -453,13 +459,8 @@ local function searchOutput(self)
 
         local lanePosition = vecSubtract(self.output, positionAdjustment)
 
-        --* Search for room
-
+        if not findRoom(lanePosition, 0.1) then return false end
         
-
-
-
-        --* Do lane things
 
         --! search for a free position
 
