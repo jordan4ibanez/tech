@@ -51,6 +51,7 @@ local floor = math.floor
 -- Functions pulled out of thin air ~spooky~
 local beltSwitch = grabBeltSwitch()
 local turnBeltSwitch = grabTurnBeltSwitch()
+local flatBeltSwitch = grabFlatBelts()
 
 --! Beginning of belt item object
 
@@ -165,9 +166,6 @@ local function getDirectionTurn(newRotation, currentRotation, currentLane)
     local case = buildString(currentRotation, " ", newRotation, " ", currentLane)
     local value = turnChangeSwitch:match(case)
 
-    write("case: ", case)
-    write("the value is: ", value)
-
     return turnChangeSwitch:match(case)
 end
 
@@ -213,6 +211,7 @@ function beltItem:movement(object)
         --* Check if going into a turn
         local turning = false
         local turned = false
+        local newLane = 0
 
         if turnBeltSwitch:match(frontBeltName) then
 
@@ -227,15 +226,12 @@ function beltItem:movement(object)
 
             if turnApex == outer then
 
-                write("outer")
-
                 if headingDirection.x ~= 0 then
                     newPosition.x = position1.x + (headingDirection.x * 1.25)
                 elseif headingDirection.z ~= 0 then
                     newPosition.z = position1.z + (headingDirection.z * 1.25)
                 end
             else
-                write("inner")
                 if headingDirection.x ~= 0 then
                     newPosition.x = position1.x + (headingDirection.x * 0.75)
                 elseif headingDirection.z ~= 0 then
@@ -245,16 +241,14 @@ function beltItem:movement(object)
             
             turned = true
             turning = true
+            newLane = self.lane
         end
 
         ::quickExit::
         
 
-        
-        local newLane = 0
-
         --* Check if turning straight to straight
-        if not turning and frontBeltDir ~= beltDir then
+        if not turning and frontBeltDir ~= beltDir and flatBeltSwitch:match(frontBeltName) then
 
             newLane = getDirectionChangeLane(beltDir, frontBeltDir)
 
