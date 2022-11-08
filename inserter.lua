@@ -468,6 +468,8 @@ local function searchOutput(self)
 
         beltEntity:setItem(self.holding)
 
+        beltEntity:setLane(lane)
+
         self.holding = ""
 
         self:updateVisual(self.holding)
