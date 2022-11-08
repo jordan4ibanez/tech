@@ -139,9 +139,24 @@ function beltItem:movement(object)
     if beltSpeed then
 
         local direction = directionSwitch:match(beltDir, object)
-        local speed = beltSpeed / 30
-        direction = vecMultiply(direction, speed)
-        local newPosition = vecAdd(position, direction)
+        beltSpeed = beltSpeed / 30
+        local velocity = vecMultiply(direction, beltSpeed)
+        local newPosition = vecAdd(position, velocity)
+
+
+        --* Check if changing direction
+        local frontNodeIdentity = getNode(newPosition)
+        local frontBeltName = extractName(frontNodeIdentity)
+
+        if not beltSwitch:match(frontBeltName) then return false end
+
+        local frontBeltDir = extractDirection(frontNodeIdentity)
+        
+        if frontBeltDir ~= beltDir then
+            write("change direction")
+            
+            return false
+        end
 
 
         local function findRoom(radius)
@@ -162,19 +177,7 @@ function beltItem:movement(object)
 
         --* Check if there is enough room
         if not findRoom(0.2) then return false end
-
-
-        --* Check if changing direction
-        local frontNodeIdentity = getNode(newPosition)
-        local frontBeltName = extractName(frontNodeIdentity)
-
-        if not beltSwitch:match(frontBeltName) then return false end
-
-        local frontBeltDir = extractDirection(frontNodeIdentity)
         
-        if frontBeltDir ~= beltDir then
-            write("change direction")
-        end
 
         object:move_to(newPosition, false)
     -- Not on a belt
@@ -184,6 +187,8 @@ function beltItem:movement(object)
         return true
     end
 end
+
+
 
 function beltItem:on_step(delta)
     local object = self.object
