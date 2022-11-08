@@ -104,7 +104,7 @@ function simpleSwitch:new(case_table)
     }
     setmetatable(object, self)
     self.__index = self;
-    return immutable(object)
+    return object
 end
 
 function simpleSwitch:match(case)
