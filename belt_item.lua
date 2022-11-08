@@ -4,6 +4,7 @@ local rootPath = ...
 local customTools          = dofile(rootPath .. "/custom_tools.lua")
 local buildString          = customTools.buildString
 local switch               = customTools.switch
+local simpleSwitch         = customTools.simpleSwitch
 local write                = customTools.write
 local immutable            = customTools.immutable
 local immutableIpairs      = customTools.immutableIpairs
@@ -33,6 +34,8 @@ local newVec               = vector.new
 local zeroVec              = vector.zero
 local vecMultiply          = vector.multiply
 local vecAdd               = vector.add
+local serialize            = minetest.serialize
+local deserialize          = minetest.deserialize
 
 -- Functions pulled out of thin air ~spooky~
 local beltSwitch = grabBeltSwitch()
@@ -49,17 +52,23 @@ local beltItem = {
         textures = {""},
         is_visible = false,
     },
-    
+    itemString = "",
     flooredPosition = nil,
-    oldPosition     = nil
+    oldPosition     = nil,
+    lane = 0,
+    direction = 0,
 }
+
+function beltItem:setLane(lane)
+    self.lane = lane
+end
 
 function beltItem:setItem(item)
 
-    local stack = ItemStack(item or self.itemstring)
-    self.itemstring = stack:to_string()
+    local stack = ItemStack(item or self.itemString)
+    self.itemString = stack:to_string()
 
-    if self.itemstring == "" then
+    if self.itemString == "" then
         -- item not yet known
         return
     end
@@ -87,69 +96,105 @@ function beltItem:pollPosition(object)
     local flooredPosition = entityFloor(object)
 
     if not self.flooredPosition or not vector.equals(self.flooredPosition, flooredPosition) then
+
+        if self.flooredPosition then
+            self.oldFlooredPosition = self.flooredPosition
+        else
+            self.oldFlooredPosition = flooredPosition
+        end
+
         self.flooredPosition = flooredPosition
+
+        return true
     end
+    return false
 end
 
--- When the object comes into existence
-function beltItem:on_activate(staticdata, dtime_s)
-    self:pollPosition(self.object)
-    self:saveStepMemory()
-end
 
--- Save memory for the next server step
-function beltItem:saveStepMemory()
-    if not self.oldPosition or not vector.equals(self.flooredPosition, self.oldPosition) then
-        self.oldPosition = vector.copy(self.flooredPosition)
-    end
-end
 
--- This is a hack to make the things move on the belts for now
-local dirVec0 = immutable(vector.new( 0, 0,-1))
-local dirVec1 = immutable(vector.new(-1, 0, 0))
-local dirVec2 = immutable(vector.new( 0, 0, 1))
-local dirVec3 = immutable(vector.new( 1, 0, 0))
-local directionSwitch = switch:new({
-    [0] = function(object)
-        object:set_velocity(dirVec0)
-    end,
-    [1] = function(object)
-        object:set_velocity(dirVec1)
-    end,
-    [2] = function(object)
-        object:set_velocity(dirVec2)
-    end,
-    [3] = function(object)
-        object:set_velocity(dirVec3)
-    end,
+local directionSwitch = simpleSwitch:new({
+    [0] = immutable(vector.new( 0, 0,-1)),
+    [1] = immutable(vector.new(-1, 0, 0)),
+    [2] = immutable(vector.new( 0, 0, 1)),
+    [3] = immutable(vector.new( 1, 0, 0)),
 })
 
+function beltItem:pollBelt(object, update)
 
+    if not update then return end
 
-function beltItem:pollBelt(object)
-    local position = self.flooredPosition
+end
+
+function beltItem:movement(object)
+
+    local position = object:get_pos()
+
     local nodeIdentity = getNode(position)
-    local beltName = extractName(nodeIdentity)
-    local beltDir  = extractDirection(nodeIdentity)
-    local beltSpeed, beltAngle = beltSwitch:match(beltName)
 
+    local beltName = extractName(nodeIdentity)
+
+    local beltDir  = extractDirection(nodeIdentity)
+
+    local beltSpeed, beltAngle = beltSwitch:match(beltName)
+    
     if beltSpeed then
-        -- write(beltSpeed, " ", beltAngle, " ", beltDir)
-        directionSwitch:match(beltDir, object)
-    else
-        write("I ain't on no belt")
+        local direction = directionSwitch:match(beltDir, object)
+        
+        local speed = beltSpeed / 30
+
+        direction = vecMultiply(direction, speed)
+
+        local newPosition = vecAdd(position, direction)
+
+        object:move_to(newPosition, false)
     end
 end
 
 function beltItem:on_step(delta)
     local object = self.object
-    
-    self:pollPosition(object)
-
-    self:pollBelt(object)
-    
-    self:saveStepMemory()
+    self:movement(object)
+    local update = self:pollPosition(object)
+    self:pollBelt(object, update)
 end
 
--- Todo: Make this do a thing!
+
+local function gotStaticData(self, dataTable)
+    for key, value in pairs(dataTable) do
+        self[key] = value
+    end
+
+    self:setItem(self.itemString)
+end
+
+
+-- When the object comes into existence
+function beltItem:on_activate(staticData)
+
+    -- Something went horribly wrong
+    if not staticData then self.object:remove() return end
+
+    local dataTable = deserialize(staticData)
+
+    --! Reloading
+    if dataTable then
+        gotStaticData(self, dataTable)
+    --! Initial creation
+    else
+        self:pollPosition(self.object)
+    end
+end
+
+-- Automate static data serialization
+function beltItem:get_staticdata()
+    local tempTable = {}
+
+    for key,value in pairs(self) do
+        if key ~= "object" then
+            tempTable[key] = value
+        end
+    end
+
+    return serialize(tempTable)
+end
+
 registerEntity("tech:beltItem", beltItem)
