@@ -446,24 +446,32 @@ local function searchOutput(self)
 
     elseif flatBelts:match(nodeName) then
 
-        -- debugParticle(self.position)
-        -- debugParticle(self.output)
+        local function findRoom(position, radius)
+            local objects = objectsInRadius(position, radius)
+
+            for _,object in ipairs(objects) do
+                write(dump(object))
+                
+            end
+            return true
+        end
 
         local internalDirection = vecDirection(self.position, self.output)
 
         local lane = getLane(internalDirection, nodeRotation)
 
         if not lane then return false end
-        
 
         local positionAdjustment = vecMultiply(internalDirection, 0.25)
 
-
-        write("Lane is: ", lane)
-
-        debugParticle(vecSubtract(self.output, positionAdjustment))
+        local lanePosition = vecSubtract(self.output, positionAdjustment)
 
         --* Search for room
+
+        
+
+
+
         --* Do lane things
 
         --! search for a free position
