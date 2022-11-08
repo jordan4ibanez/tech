@@ -181,7 +181,7 @@ function beltItem:movement(object)
     if beltSpeed then
 
         local direction = directionSwitch:match(beltDir, object)
-        beltSpeed = beltSpeed / 40
+        beltSpeed = beltSpeed / 30
         local velocity = vecMultiply(direction, beltSpeed)
         local newPosition = vecAdd(position, velocity)
 
