@@ -97,3 +97,7 @@ flatBelts = boolSwitch:new(flatBelts)
 function grabFlatBelts()
     return flatBelts
 end
+
+function grabBeltSwitch()
+    return beltSwitch
+end
