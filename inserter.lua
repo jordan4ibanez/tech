@@ -456,13 +456,15 @@ local function searchOutput(self)
         local lanePosition = vecSubtract(self.output, positionAdjustment)
         if not findRoom(lanePosition, 0.2) then return false end
 
-        local beltEntity = addEntity(lanePosition, "tech:beltItem")
+        local beltEntity = addEntity(lanePosition, "tech:beltItem", "new")
 
         if not beltEntity then return false end
         
         beltEntity = beltEntity:get_luaentity()
 
         beltEntity:setItem(self.holding)
+
+        beltEntity:setLane(lane)
 
         self.holding = ""
 
