@@ -6,6 +6,7 @@
         "ItemStack",
         "dump",
         "flatBelts",
-        "grabFlatBelts"
+        "grabFlatBelts",
+        "grabBeltSwitch"
     ]
 }
