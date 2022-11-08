@@ -209,7 +209,9 @@ local inserter = {
     production = false,
     productionStage = 0,
     visual = nil,
-    holding = ""
+    holding = "",
+
+    warmUpTimer = 0
 }
 
 -- Animation mechanics
@@ -590,6 +592,9 @@ local function gotStaticData(self, dataTable)
     if self.production then
         self:setAnimation(shortCutActivateAnimation(self.productionStage))
     end
+
+    -- Needs to wait for the server to initialize fully!
+    self.warmUpTimer = 5
 end
 
 local function noStaticData(self)
@@ -629,7 +634,14 @@ end
 
 
 function inserter:on_step(delta)
-    local animationTimer = self:animationTick(delta)
+
+    -- Neesd to wait for the server to iniialize fully
+    if self.warmUpTimer > 0 then
+        self.warmUpTimer = self.warmUpTimer - delta
+        return
+    end
+
+    self:animationTick(delta)
     self:bootProcedure()
     self:productionProcedure()
 end
