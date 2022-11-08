@@ -40,9 +40,47 @@ local beltSwitch = grabBeltSwitch()
 --! Beginning of belt item object
 
 local beltItem = {
+    initial_properties = {
+        physical = false,
+        collide_with_objects = false,
+        collisionbox = { 0, 0, 0, 0, 0, 0 },
+        visual = "wielditem",
+        visual_size = {x = 0.25, y = 0.25},
+        textures = {""},
+        is_visible = false,
+    },
+    
     flooredPosition = nil,
     oldPosition     = nil
 }
+
+function beltItem:setItem(item)
+
+    local stack = ItemStack(item or self.itemstring)
+    self.itemstring = stack:to_string()
+
+    if self.itemstring == "" then
+        -- item not yet known
+        return
+    end
+
+    local itemname = stack:is_known() and stack:get_name() or "unknown"
+    local def = registeredItems[itemname]
+    local glow = def and def.light_source and math.floor(def.light_source / 2 + 0.5)
+
+    self.object:set_properties({
+        is_visible = true,
+        visual = "wielditem",
+        textures = {itemname},
+        glow = glow,
+    })
+end
+
+function beltItem:removeItem()
+    self.object:set_properties({
+        is_visible = false,
+    })
+end
 
 -- Get the floored position
 function beltItem:pollPosition(object)
