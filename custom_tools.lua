@@ -219,6 +219,15 @@ local function debugParticle(position)
     })
 end
 
+-- Why did I make this
+local function ternary(case, option1, option2)
+    if case then
+        return option1
+    else
+        return option2
+    end
+end
+
 
 -- There are two ways to do this: _, _, _ or {_, _, _}. I like the second one better
 return {
@@ -237,5 +246,6 @@ return {
     entityFloor      = entityFloor,
     extractName      = extractName,
     extractDirection = extractDirection,
-    debugParticle    = debugParticle
+    debugParticle    = debugParticle,
+    ternary          = ternary
 }
