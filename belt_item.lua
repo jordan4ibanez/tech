@@ -177,7 +177,8 @@ function beltItem:movement(object)
     local beltName = extractName(nodeIdentity)
     local beltDir  = extractDirection(nodeIdentity)
     local beltSpeed, beltAngle = beltSwitch:match(beltName)
-    
+
+
     if not beltSpeed then
         addItem(position, self.itemString)
         object:remove()
@@ -188,13 +189,36 @@ function beltItem:movement(object)
     beltSpeed = beltSpeed / 30
     local velocity = vecMultiply(direction, beltSpeed)
     local newPosition = vecAdd(position, velocity)
+
     local frontNodeIdentity = getNode(newPosition)
+    
     local frontBeltName = extractName(frontNodeIdentity)
     local frontBeltSpeed, frontBeltAngle = beltSwitch:match(frontBeltName)
-
-    
     
 
+    if not frontBeltSpeed and beltAngle == 45 then
+
+        local integerPosition = vecAdd(vecRound(newPosition), direction)
+        
+        frontNodeIdentity = getNode(integerPosition)
+    
+        frontBeltName = extractName(frontNodeIdentity)
+        frontBeltSpeed, frontBeltAngle = beltSwitch:match(frontBeltName)
+
+        if not frontBeltSpeed then return false end
+
+        if direction.x ~= 0 then
+            integerPosition.x = integerPosition.x + (direction.x * -0.45)
+            newPosition.x = integerPosition.x
+            newPosition.y = integerPosition.y
+        elseif direction.z ~= 0 then
+            integerPosition.z = integerPosition.z + (direction.z * -0.45)
+            newPosition.z = integerPosition.z
+            newPosition.y = integerPosition.y
+        end
+
+        debugParticle(integerPosition)
+    end
 
     if not frontBeltSpeed then return false end
 
