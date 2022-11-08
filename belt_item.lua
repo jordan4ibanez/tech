@@ -34,6 +34,9 @@ local zeroVec              = vector.zero
 local vecMultiply          = vector.multiply
 local vecAdd               = vector.add
 
+-- Functions pulled out of thin air ~spooky~
+local beltSwitch = grabBeltSwitch()
+
 --! Beginning of belt item object
 
 local beltItem = {
