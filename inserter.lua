@@ -309,36 +309,23 @@ end
 
 -- Grab the first thing it sees
 local function grabInputFromPosition(position, radius)
-
     local gottenObject = objectsInRadius(position, radius)
-
     if not gottenObject then return false end
-
     if #gottenObject <= 0 then return false end
-
     gottenObject = gottenObject[1]
-
     local gottenEntity = gottenObject:get_luaentity()
-
     if not gottenEntity.name or gottenEntity.name ~= "__builtin:item" then return false end
-
     local itemString = gottenEntity.itemstring
-
     local stack = ItemStack(itemString)
-
     itemString = stack:get_name()
-
     local count = stack:get_count()
-
     count = count - 1
-
     if count <= 0 then
         gottenObject:remove()
     else
         stack:set_count(count)
         gottenEntity:set_item(stack)
     end
-
     return itemString
 end
 
@@ -451,7 +438,7 @@ local function searchOutput(self)
 
             for _,object in ipairs(objects) do
                 write(dump(object))
-                
+
             end
             return true
         end
