@@ -167,7 +167,7 @@ local function getDirectionTurn(newRotation, currentRotation, currentLane)
     return turnChangeSwitch:match(case)
 end
 
-
+-- Todo: Rewrite this mess with a headway position
 function beltItem:movement(object)
 
     local position = object:get_pos()
@@ -177,12 +177,22 @@ function beltItem:movement(object)
     local beltName = extractName(nodeIdentity)
     local beltDir  = extractDirection(nodeIdentity)
     local beltSpeed, beltAngle = beltSwitch:match(beltName)
-
+    
 
     if not beltSpeed then
-        addItem(position, self.itemString)
-        object:remove()
-        return true
+        --! This is a hack for downward belts
+        nodeIdentity = getNode(newVec(
+            position.x, position.y + 0.5, position.z
+        ))
+        beltName = extractName(nodeIdentity)
+        beltDir  = extractDirection(nodeIdentity)
+        beltSpeed, beltAngle = beltSwitch:match(beltName)
+
+        if not beltSpeed then
+            addItem(position, self.itemString)
+            object:remove()
+            return true
+        end
     end
 
     local direction = directionSwitch:match(beltDir, object)
@@ -192,10 +202,11 @@ function beltItem:movement(object)
 
     local frontNodeIdentity = getNode(newPosition)
     
+    
     local frontBeltName = extractName(frontNodeIdentity)
     local frontBeltSpeed, frontBeltAngle = beltSwitch:match(frontBeltName)
     
-
+    -- Going up to flat or up again
     if not frontBeltSpeed and beltAngle == 45 then
 
         local integerPosition = vecAdd(vecRound(newPosition), direction)
@@ -210,23 +221,52 @@ function beltItem:movement(object)
         if direction.x ~= 0 then
             integerPosition.x = integerPosition.x + (direction.x * -0.45)
             newPosition.x = integerPosition.x
-            newPosition.y = integerPosition.y
         elseif direction.z ~= 0 then
             integerPosition.z = integerPosition.z + (direction.z * -0.45)
             newPosition.z = integerPosition.z
-            newPosition.y = integerPosition.y
+        end
+        newPosition.y = integerPosition.y
+
+    --! Going flat to down - This is a logic limitation, flat to down, and down to down, if you can come up with a better solution, make a pr
+    elseif not frontBeltSpeed then
+
+        local integerPosition = vecRound(newPosition)
+        integerPosition.y = integerPosition.y - 1
+        frontNodeIdentity = getNode(integerPosition)
+        frontBeltName = extractName(frontNodeIdentity)
+        frontBeltSpeed, frontBeltAngle = beltSwitch:match(frontBeltName)
+
+        if not frontBeltSpeed then return false end
+
+        if direction.x ~= 0 then
+            newPosition.x = integerPosition.x
+        elseif direction.z ~= 0 then
+            newPosition.z = integerPosition.z
         end
 
-        debugParticle(integerPosition)
+        newPosition.y = integerPosition.y + 0.45
+
     end
 
     if not frontBeltSpeed then return false end
 
     -- Upward belt logic flow
-    local goingUp = false
-
     if frontBeltAngle == 45 or beltAngle == 45 then
         newPosition.y = newPosition.y + beltSpeed
+    
+    -- Downwards belt logic flow - This needs an additional check because it's a mess
+    elseif frontBeltAngle == -45 or beltAngle == -45 then
+
+        newPosition.y = newPosition.y - beltSpeed
+        
+        -- Here is the additional check
+
+        frontNodeIdentity = getNode(newPosition)
+        frontBeltName = extractName(frontNodeIdentity)
+
+        if flatBeltSwitch:match(frontBeltName) then
+            newPosition.y = math.ceil(newPosition.y)
+        end
     end
         
 
