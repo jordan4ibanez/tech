@@ -356,14 +356,30 @@ local function searchInput(self)
 
         return true
     elseif flatBelts:match(nodeName) then
-        write("Yeah, that's a flat belt")
 
-        debugParticle(self.input)
+        local internalDirection = vecDirection(self.position, self.input)
+        local positionAdjustment = vecMultiply(internalDirection, 0.25)
+        local lanePosition = vecSubtract(self.input, positionAdjustment)
 
-        --! This needs to be adjusted: Tune radius, tune position
-        grabInputFromPosition(self.input, 0.5)
+        local gottenObject = objectsInRadius(lanePosition, 0.2)
+        if not gottenObject then return false end
+        if #gottenObject <= 0 then return false end
+        gottenObject = gottenObject[1]
+        local gottenEntity = gottenObject:get_luaentity()
 
-        return false
+        if not gottenEntity.name then return false end
+        if gottenEntity.name ~= "tech:beltItem" then return false end
+        local itemString = gottenEntity.itemString
+
+        if not itemString then return end
+
+        self.holding = itemString
+        self:updateVisual(self.holding)
+        self:setAnimation("reachForward")
+        
+        gottenObject:remove()
+
+        return true
     end
 
     local possibleInventorySelections = examineInputInventories(nodeName)
