@@ -172,7 +172,10 @@ end
 function beltItem:movement(object)
 
     local position = object:get_pos()
-    local nodeIdentity = getNode(position)
+
+    local nodeIdentity = getNode(newVec(
+        position.x, position.y - 0.5, position.z
+    ))
     local beltName = extractName(nodeIdentity)
     local beltDir  = extractDirection(nodeIdentity)
     local beltSpeed, beltAngle = beltSwitch:match(beltName)
@@ -180,15 +183,69 @@ function beltItem:movement(object)
     if beltSpeed then
 
         local direction = directionSwitch:match(beltDir, object)
-        beltSpeed = beltSpeed / 30
+        beltSpeed = beltSpeed / 10
         local velocity = vecMultiply(direction, beltSpeed)
         local newPosition = vecAdd(position, velocity)
 
+        if beltAngle and beltAngle ~= 0 then
+            if beltAngle == 45 then
+                newPosition.y = newPosition.y + beltSpeed
+            else
+                write("down")
+                newPosition.y = newPosition.y - beltSpeed
+            end
+        else
+            newPosition.y = floor(newPosition.y)
+        end
         
-        local frontNodeIdentity = getNode(newPosition)
+        local frontNodeIdentity = getNode(newVec(
+            newPosition.x, newPosition.y - 0.5, newPosition.z
+        ))
+
         local frontBeltName = extractName(frontNodeIdentity)
 
-        if not beltSwitch:match(frontBeltName) then return false end
+        write("belt angle: ", beltAngle)
+
+        -- Downward belts need a "hook" to allow the initial entry point
+        if not beltSwitch:match(frontBeltName) then
+            if beltAngle == 45 then
+
+                frontNodeIdentity = getNode(newVec(
+                    newPosition.x, newPosition.y - 0.25, newPosition.z
+                ))
+
+                frontBeltName = extractName(frontNodeIdentity)
+
+                if not beltSwitch:match(frontBeltName) then return false end
+                
+                newPosition.y = newPosition.y - 0.1
+
+            elseif beltAngle == 0 then
+
+                frontNodeIdentity = getNode(newVec(
+                    newPosition.x, newPosition.y - 0.75, newPosition.z
+                ))
+
+                frontBeltName = extractName(frontNodeIdentity)
+
+                if not beltSwitch:match(frontBeltName) then return false end
+                
+                newPosition.y = newPosition.y - 0.1
+            elseif beltAngle == -45 then
+                frontNodeIdentity = getNode(newVec(
+                    newPosition.x, newPosition.y + 0.25, newPosition.z
+                ))
+
+                frontBeltName = extractName(frontNodeIdentity)
+
+                if not beltSwitch:match(frontBeltName) then return false end
+                
+                write("got a downward belt!")
+                newPosition.y = floor(newPosition.y + 0.1)
+            else
+                return false
+            end
+        end
 
         local frontBeltDir = extractDirection(frontNodeIdentity)
 
