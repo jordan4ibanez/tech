@@ -230,6 +230,7 @@ function beltItem:movement(object)
                 elseif headingDirection.z ~= 0 then
                     newPosition.z = position1.z + (headingDirection.z * 1.25)
                 end
+
             else
                 if headingDirection.x ~= 0 then
                     newPosition.x = position1.x + (headingDirection.x * 0.75)
@@ -247,7 +248,8 @@ function beltItem:movement(object)
         
 
         --* Check if turning straight to straight
-        if not turning and frontBeltDir ~= beltDir and flatBeltSwitch:match(frontBeltName) then
+        
+        if not turning and frontBeltDir ~= beltDir and not turnBeltSwitch:match(frontBeltName) then
 
             newLane = getDirectionChangeLane(beltDir, frontBeltDir)
 
@@ -263,9 +265,7 @@ function beltItem:movement(object)
             end
 
             turned = true
-            
         end
-        
 
         --* Check if there is enough room
         if not findRoom(newPosition, 0.2) then return false end
