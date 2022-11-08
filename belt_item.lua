@@ -69,6 +69,7 @@ local beltItem = {
     direction = 0,
     stopped = false,
     automatic_face_movement_dir = 0.0,
+    lockedInTurn = false
 }
 
 function beltItem:setItem(item)
@@ -135,8 +136,8 @@ end
 
 -- Comment is the input belt's rotation
 -- Value is movement amount, inner or outer, true is inner, false is outer
-local inner = true
-local outer = false
+local inner = 1
+local outer = 2
 local turnChangeSwitch = simpleSwitch:new({
     --0
     ["3 2 1"] = outer,
@@ -157,11 +158,16 @@ local turnChangeSwitch = simpleSwitch:new({
     ["2 1 1"] = outer,
     ["0 1 1"] = inner,
     ["2 1 2"] = inner,
-    ["0 1 2"] = outer,
+    ["0 1 2"] = outer
 })
 
 local function getDirectionTurn(newRotation, currentRotation, currentLane)
     local case = buildString(currentRotation, " ", newRotation, " ", currentLane)
+    local value = turnChangeSwitch:match(case)
+
+    write("case: ", case)
+    write("the value is: ", value)
+
     return turnChangeSwitch:match(case)
 end
 
@@ -206,19 +212,45 @@ function beltItem:movement(object)
 
         --* Check if going into a turn
         local turning = false
+        local turned = false
+
         if turnBeltSwitch:match(frontBeltName) then
 
-            local newLane = getDirectionTurn(beltDir, frontBeltDir, self.lane)
+            local turnApex = getDirectionTurn(beltDir, frontBeltDir, self.lane)
 
-            if newLane then
-                object:remove()
-                return
+            if not turnApex then goto quickExit end
+
+            local position1 = vecRound(position)
+            local position2 = vecRound(newPosition)
+
+            local headingDirection = vecDirection(position1, position2)
+
+            if turnApex == outer then
+
+                write("outer")
+
+                if headingDirection.x ~= 0 then
+                    newPosition.x = position1.x + (headingDirection.x * 1.25)
+                elseif headingDirection.z ~= 0 then
+                    newPosition.z = position1.z + (headingDirection.z * 1.25)
+                end
+            else
+                write("inner")
+                if headingDirection.x ~= 0 then
+                    newPosition.x = position1.x + (headingDirection.x * 0.75)
+                elseif headingDirection.z ~= 0 then
+                    newPosition.z = position1.z + (headingDirection.z * 0.75)
+                end
             end
+            
+            turned = true
             turning = true
         end
+
+        ::quickExit::
         
 
-        local turned = false
+        
         local newLane = 0
 
         --* Check if turning straight to straight
