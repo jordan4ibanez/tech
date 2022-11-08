@@ -317,7 +317,7 @@ local function grabInputFromPosition(position, radius)
     if #gottenObject <= 0 then return false end
     gottenObject = gottenObject[1]
     local gottenEntity = gottenObject:get_luaentity()
-
+    if not gottenEntity then return false end
     if not gottenEntity.name then return false end
     if gottenEntity.name ~= "__builtin:item" then return false end
     local itemString = gottenEntity.itemstring
