@@ -164,15 +164,13 @@ local turnChangeSwitch = simpleSwitch:new({
 
 local function getDirectionTurn(newRotation, currentRotation, currentLane)
     local case = buildString(currentRotation, " ", newRotation, " ", currentLane)
-    local value = turnChangeSwitch:match(case)
-
     return turnChangeSwitch:match(case)
 end
+
 
 function beltItem:movement(object)
 
     local position = object:get_pos()
-
     local nodeIdentity = getNode(position)
     local beltName = extractName(nodeIdentity)
     local beltDir  = extractDirection(nodeIdentity)
@@ -185,21 +183,12 @@ function beltItem:movement(object)
         local velocity = vecMultiply(direction, beltSpeed)
         local newPosition = vecAdd(position, velocity)
 
-        if beltAngle and beltAngle ~= 0 then
-            if beltAngle == 45 then
-                newPosition.y = newPosition.y + beltSpeed
-            else
-                newPosition.y = newPosition.y - beltSpeed
-            end
-        else
-            newPosition.y = floor(newPosition.y)
-        end
         
-        local frontNodeIdentity = getNode(newVec(
-            newPosition.x, newPosition.y, newPosition.z
-        ))
-
+        local frontNodeIdentity = getNode(newPosition)
         local frontBeltName = extractName(frontNodeIdentity)
+
+        if not beltSwitch:match(frontBeltName) then return false end
+
         local frontBeltDir = extractDirection(frontNodeIdentity)
 
         local function findRoom(searchingPosition, radius)
@@ -302,7 +291,6 @@ function beltItem:movement(object)
         return true
     end
 end
-
 
 
 function beltItem:on_step(delta)
