@@ -16,6 +16,7 @@ local entityFloor          = customTools.entityFloor
 local extractName          = customTools.extractName
 local extractDirection     = customTools.extractDirection
 local debugParticle        = customTools.debugParticle
+local ternary              = customTools.ternary
 
 -- Minetest functions
 local registerNode         = minetest.register_node
@@ -34,6 +35,7 @@ local newVec               = vector.new
 local zeroVec              = vector.zero
 local vecMultiply          = vector.multiply
 local vecAdd               = vector.add
+local vecSubtract          = vector.subtract
 local vecRound             = vector.round
 local vecDirection         = vector.direction
 local serialize            = minetest.serialize
@@ -95,14 +97,10 @@ local laneSwitch = simpleSwitch:new({
     ["2 1"] = 2
 })
 
-local function getLane(position, goal, rotation)
-    local internalDirection = vecDirection(position, goal)
-    local internalRotation = dirToFourDir(internalDirection)
-
+local function getLane(direction, rotation)
+    local internalRotation = dirToFourDir(direction)
     local case = buildString(internalRotation, " ", rotation)
-
     return laneSwitch:match(case)
-
 end
 
 local containers = {
@@ -448,15 +446,25 @@ local function searchOutput(self)
 
     elseif flatBelts:match(nodeName) then
 
-        debugParticle(self.position)
-        debugParticle(self.output)
+        -- debugParticle(self.position)
+        -- debugParticle(self.output)
 
-        local lane = getLane(self.position, self.output, nodeRotation)
+        local internalDirection = vecDirection(self.position, self.output)
 
-        if lane then
-            --* Search for room
-            --* Do lane things
-        end
+        local lane = getLane(internalDirection, nodeRotation)
+
+        if not lane then return false end
+        
+
+        local positionAdjustment = vecMultiply(internalDirection, 0.25)
+
+
+        write("Lane is: ", lane)
+
+        debugParticle(vecSubtract(self.output, positionAdjustment))
+
+        --* Search for room
+        --* Do lane things
 
         --! search for a free position
 
