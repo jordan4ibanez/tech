@@ -343,7 +343,7 @@ local function searchInput(self)
     local nodeIdentity = getNode(inputPosition)
     local nodeName     = extractName(nodeIdentity)
 
-    --! if it's a belt, do another function to search the belt position then return here
+    
     if isAir(nodeName) then
 
         local gottenItemString = grabInputFromPosition(self.input, 0.5)
