@@ -450,17 +450,13 @@ local function searchOutput(self)
         end
 
         local internalDirection = vecDirection(self.position, self.output)
-
         local lane = getLane(internalDirection, nodeRotation)
-
         if not lane then return false end
-
         local positionAdjustment = vecMultiply(internalDirection, 0.25)
-
         local lanePosition = vecSubtract(self.output, positionAdjustment)
-
         if not findRoom(lanePosition, 0.1) then return false end
-        
+        write("ready to place")
+
 
         --! search for a free position
 
