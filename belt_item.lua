@@ -45,6 +45,9 @@ local deserialize          = minetest.deserialize
 local objectsInRadius      = minetest.get_objects_inside_radius
 local isPlayer             = minetest.is_player
 
+-- Lua functions
+local floor = math.floor
+
 -- Functions pulled out of thin air ~spooky~
 local beltSwitch = grabBeltSwitch()
 
@@ -192,6 +195,8 @@ function beltItem:movement(object)
             return true
         end
 
+        local turned = false
+
         if frontBeltDir ~= beltDir then
             -- write("change direction")
             local newLane = getDirectionChangeLane(beltDir, frontBeltDir)
@@ -208,6 +213,8 @@ function beltItem:movement(object)
             elseif headingDirection.z ~= 0 then
                 newPosition.z = position1.z + (headingDirection.z * 0.75)
             end
+
+            turned = true
             
         end
         
@@ -215,6 +222,16 @@ function beltItem:movement(object)
         --* Check if there is enough room
         if not findRoom(newPosition, 0.2) then return false end
         
+        if turned then
+            local rotation = floor(object:get_yaw() * 100000)
+            if rotation == 157079 then
+                rotation = 0
+            else
+                rotation = math.pi / 2
+            end
+
+            object:set_yaw(rotation)
+        end
 
         object:move_to(newPosition, false)
     -- Not on a belt
