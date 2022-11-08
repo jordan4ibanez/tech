@@ -5,6 +5,7 @@ local customTools          = dofile(rootPath .. "/custom_tools.lua")
 local buildString          = customTools.buildString
 local switch               = customTools.switch
 local simpleSwitch         = customTools.simpleSwitch
+local boolSwitch           = customTools.boolSwitch
 local write                = customTools.write
 local immutable            = customTools.immutable
 local immutableIpairs      = customTools.immutableIpairs
@@ -16,6 +17,8 @@ local vec2                 = customTools.vec2
 local entityFloor          = customTools.entityFloor
 local extractName          = customTools.extractName
 local extractDirection     = customTools.extractDirection
+local debugParticle        = customTools.debugParticle
+local ternary              = customTools.ternary
 
 -- Minetest functions
 local registerNode         = minetest.register_node
@@ -34,6 +37,9 @@ local newVec               = vector.new
 local zeroVec              = vector.zero
 local vecMultiply          = vector.multiply
 local vecAdd               = vector.add
+local vecFloor             = vector.floor
+local vecRound             = vector.round
+local vecDirection         = vector.direction
 local serialize            = minetest.serialize
 local deserialize          = minetest.deserialize
 local objectsInRadius      = minetest.get_objects_inside_radius
@@ -57,14 +63,10 @@ local beltItem = {
     itemString = "",
     flooredPosition = nil,
     oldPosition     = nil,
-    lane = 0,
     direction = 0,
-    stopped = false
+    stopped = false,
+    automatic_face_movement_dir = 0.0,
 }
-
-function beltItem:setLane(lane)
-    self.lane = lane
-end
 
 function beltItem:setItem(item)
 
@@ -122,6 +124,28 @@ local directionSwitch = simpleSwitch:new({
     [3] = immutable(vector.new( 1, 0, 0)),
 })
 
+
+-- Comment is the node rotation
+local directionChangeSwitch = simpleSwitch:new({
+    -- 0
+    ["1 2"] = 1,
+    ["3 2"] = 2,
+    -- 1
+    ["2 3"] = 1,
+    ["0 3"] = 2,
+    -- 2
+    ["3 0"] = 1,
+    ["1 0"] = 2,
+    -- 3
+    ["0 1"] = 1,
+    ["2 1"] = 2
+})
+
+local function getDirectionChangeLane(newRotation, currentRotation)
+    local case = buildString(currentRotation, " ", newRotation)
+    return directionChangeSwitch:match(case)
+end
+
 function beltItem:pollBelt(object, update)
 
     if not update then return end
@@ -151,16 +175,9 @@ function beltItem:movement(object)
         if not beltSwitch:match(frontBeltName) then return false end
 
         local frontBeltDir = extractDirection(frontNodeIdentity)
-        
-        if frontBeltDir ~= beltDir then
-            write("change direction")
-            
-            return false
-        end
 
-
-        local function findRoom(radius)
-            local objects = objectsInRadius(newPosition, radius)
+        local function findRoom(searchingPosition, radius)
+            local objects = objectsInRadius(searchingPosition, radius)
             for _,gottenObject in ipairs(objects) do
                 --! If you have an error here, complain to core devs about luajit versioning
                 if not gottenObject then goto continue end
@@ -175,8 +192,28 @@ function beltItem:movement(object)
             return true
         end
 
+        if frontBeltDir ~= beltDir then
+            -- write("change direction")
+            local newLane = getDirectionChangeLane(beltDir, frontBeltDir)
+
+            write("new lane: ", newLane)
+
+            local position1 = vecRound(position)
+            local position2 = vecRound(newPosition)
+
+            local headingDirection = vecDirection(position1, position2)
+
+            if headingDirection.x ~= 0 then
+                newPosition.x = position1.x + (headingDirection.x * 0.75)
+            elseif headingDirection.z ~= 0 then
+                newPosition.z = position1.z + (headingDirection.z * 0.75)
+            end
+            
+        end
+        
+
         --* Check if there is enough room
-        if not findRoom(0.2) then return false end
+        if not findRoom(newPosition, 0.2) then return false end
         
 
         object:move_to(newPosition, false)
