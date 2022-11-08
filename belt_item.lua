@@ -64,8 +64,6 @@ local beltItem = {
         is_visible = false,
     },
     itemString = "",
-    flooredPosition = nil,
-    oldPosition     = nil,
     direction = 0,
     stopped = false,
     automatic_face_movement_dir = 0.0,
@@ -97,25 +95,6 @@ function beltItem:removeItem()
     self.object:set_properties({
         is_visible = false,
     })
-end
-
--- Get the floored position
-function beltItem:pollPosition(object)
-    local flooredPosition = entityFloor(object)
-
-    if not self.flooredPosition or not vector.equals(self.flooredPosition, flooredPosition) then
-
-        if self.flooredPosition then
-            self.oldFlooredPosition = self.flooredPosition
-        else
-            self.oldFlooredPosition = flooredPosition
-        end
-
-        self.flooredPosition = flooredPosition
-
-        return true
-    end
-    return false
 end
 
 
@@ -241,8 +220,6 @@ end
 function beltItem:on_step(delta)
     local object = self.object
     self:movement(object)
-
-    -- self:pollPosition(object)
 end
 
 
@@ -266,9 +243,6 @@ function beltItem:on_activate(staticData)
     --! Reloading
     if dataTable then
         gotStaticData(self, dataTable)
-    --! Initial creation
-    else
-        self:pollPosition(self.object)
     end
 end
 
