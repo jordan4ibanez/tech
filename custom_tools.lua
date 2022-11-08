@@ -193,7 +193,7 @@ local function adjustFloor(inputVec)
 end
 
 local function entityFloor(object)
-    vector.floor(adjustFloor(object:get_pos()))
+    return vector.floor(adjustFloor(object:get_pos()))
 end
 
 -- Very lazy functions
