@@ -149,12 +149,6 @@ local function getDirectionChangeLane(newRotation, currentRotation)
     return directionChangeSwitch:match(case)
 end
 
-function beltItem:pollBelt(object, update)
-
-    if not update then return end
-
-end
-
 function beltItem:movement(object)
 
     local position = object:get_pos()
@@ -246,10 +240,9 @@ end
 
 function beltItem:on_step(delta)
     local object = self.object
-    local removed = self:movement(object)
-    if removed then return end
-    local update = self:pollPosition(object)
-    self:pollBelt(object, update)
+    self:movement(object)
+
+    -- self:pollPosition(object)
 end
 
 
