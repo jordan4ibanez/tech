@@ -183,7 +183,7 @@ function beltItem:movement(object)
     if beltSpeed then
 
         local direction = directionSwitch:match(beltDir, object)
-        beltSpeed = beltSpeed / 10
+        beltSpeed = beltSpeed / 32
         local velocity = vecMultiply(direction, beltSpeed)
         local newPosition = vecAdd(position, velocity)
 
@@ -191,7 +191,6 @@ function beltItem:movement(object)
             if beltAngle == 45 then
                 newPosition.y = newPosition.y + beltSpeed
             else
-                write("down")
                 newPosition.y = newPosition.y - beltSpeed
             end
         else
@@ -203,44 +202,28 @@ function beltItem:movement(object)
         ))
 
         local frontBeltName = extractName(frontNodeIdentity)
-
-        write("belt angle: ", beltAngle)
-
         -- Downward belts need a "hook" to allow the initial entry point
         if not beltSwitch:match(frontBeltName) then
             if beltAngle == 45 then
-
                 frontNodeIdentity = getNode(newVec(
                     newPosition.x, newPosition.y - 0.25, newPosition.z
                 ))
-
                 frontBeltName = extractName(frontNodeIdentity)
-
                 if not beltSwitch:match(frontBeltName) then return false end
-                
                 newPosition.y = newPosition.y - 0.1
-
             elseif beltAngle == 0 then
-
                 frontNodeIdentity = getNode(newVec(
                     newPosition.x, newPosition.y - 0.75, newPosition.z
                 ))
-
                 frontBeltName = extractName(frontNodeIdentity)
-
                 if not beltSwitch:match(frontBeltName) then return false end
-                
                 newPosition.y = newPosition.y - 0.1
             elseif beltAngle == -45 then
                 frontNodeIdentity = getNode(newVec(
                     newPosition.x, newPosition.y + 0.25, newPosition.z
                 ))
-
                 frontBeltName = extractName(frontNodeIdentity)
-
                 if not beltSwitch:match(frontBeltName) then return false end
-                
-                write("got a downward belt!")
                 newPosition.y = floor(newPosition.y + 0.1)
             else
                 return false
