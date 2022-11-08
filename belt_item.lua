@@ -36,6 +36,8 @@ local vecMultiply          = vector.multiply
 local vecAdd               = vector.add
 local serialize            = minetest.serialize
 local deserialize          = minetest.deserialize
+local objectsInRadius      = minetest.get_objects_inside_radius
+local isPlayer             = minetest.is_player
 
 -- Functions pulled out of thin air ~spooky~
 local beltSwitch = grabBeltSwitch()
@@ -57,6 +59,7 @@ local beltItem = {
     oldPosition     = nil,
     lane = 0,
     direction = 0,
+    stopped = false
 }
 
 function beltItem:setLane(lane)
@@ -128,31 +131,64 @@ end
 function beltItem:movement(object)
 
     local position = object:get_pos()
-
     local nodeIdentity = getNode(position)
-
     local beltName = extractName(nodeIdentity)
-
     local beltDir  = extractDirection(nodeIdentity)
-
     local beltSpeed, beltAngle = beltSwitch:match(beltName)
     
     if beltSpeed then
+
         local direction = directionSwitch:match(beltDir, object)
-        
         local speed = beltSpeed / 30
-
         direction = vecMultiply(direction, speed)
-
         local newPosition = vecAdd(position, direction)
 
+
+        local function findRoom(radius)
+            local objects = objectsInRadius(newPosition, radius)
+            for _,gottenObject in ipairs(objects) do
+                --! If you have an error here, complain to core devs about luajit versioning
+                if not gottenObject then goto continue end
+                if isPlayer(gottenObject) then goto continue end
+                local gottenEntity = gottenObject:get_luaentity()
+                if not gottenEntity then goto continue end
+                if not gottenEntity.name then goto continue end
+                if gottenEntity == self then goto continue end
+                if gottenEntity.name == "tech:beltItem" then return false end
+                ::continue::
+            end
+            return true
+        end
+
+        --* Check if there is enough room
+        if not findRoom(0.2) then return false end
+
+
+        --* Check if changing direction
+        local frontNodeIdentity = getNode(newPosition)
+        local frontBeltName = extractName(frontNodeIdentity)
+
+        if not beltSwitch:match(frontBeltName) then return false end
+
+        local frontBeltDir = extractDirection(frontNodeIdentity)
+        
+        if frontBeltDir ~= beltDir then
+            write("change direction")
+        end
+
         object:move_to(newPosition, false)
+    -- Not on a belt
+    else
+        addItem(position, self.itemString)
+        object:remove()
+        return true
     end
 end
 
 function beltItem:on_step(delta)
     local object = self.object
-    self:movement(object)
+    local removed = self:movement(object)
+    if removed then return end
     local update = self:pollPosition(object)
     self:pollBelt(object, update)
 end
