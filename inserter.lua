@@ -459,6 +459,10 @@ local function searchOutput(self)
         local beltEntity = addEntity(lanePosition, "tech:beltItem", "new")
 
         if not beltEntity then return false end
+
+        if internalDirection.z ~= 0 then
+            beltEntity:set_yaw(math.pi / 2)
+        end
         
         beltEntity = beltEntity:get_luaentity()
 
