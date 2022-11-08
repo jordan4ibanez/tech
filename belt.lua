@@ -39,10 +39,51 @@ local vecAdd               = vector.add
 
 local beltSpeeds = immutable({ 1, 2, 3})
 local beltAngles = immutable({-45, 0, 45})
+
 local beltSwitch = {}
+
 local flatBelts = {}
+local turnBelts = {}
 
 for _,beltSpeed in immutableIpairs(beltSpeeds) do
+
+local turnNameString = buildString(
+    "tech:belt_turn_", beltSpeed
+)
+
+beltSwitch[turnNameString] = function()
+    return beltSpeed
+end
+
+turnBelts[turnNameString] = true
+
+
+local definition = {
+    paramtype  = "light",
+    paramtype2 = "facedir",
+    drawtype   = "mesh",
+    mesh = "belt_0.b3d",
+    tiles = {
+        buildString("belt_",beltSpeed,"_turn.png")
+    },
+    visual_scale = 0.5,
+    groups = {
+        dig_immediate = 3
+    },
+    after_place_node = function(_, placer, _, pointedThing)
+        local lookDir = placer:get_look_dir()
+        local fourDir = convertDir(dirToFourDir(lookDir))
+        write(dirToFourDir(lookDir))
+        setNode(pointedThing.above, {name = turnNameString, param2 = fourDir})
+    end
+}
+
+registerNode(
+    turnNameString,
+    definition
+);
+
+
 for _,beltAngle in immutableIpairs(beltAngles) do
 
     local angleConversion = tostring(beltAngle):gsub("-", "negative_")
@@ -92,6 +133,8 @@ beltSwitch = switch:new(beltSwitch)
 
 flatBelts = boolSwitch:new(flatBelts)
 
+turnBelts = boolSwitch:new(turnBelts)
+
 -- Globalize it into global scope
 
 function grabFlatBelts()
@@ -100,4 +143,8 @@ end
 
 function grabBeltSwitch()
     return beltSwitch
+end
+
+function grabTurnBeltSwitch()
+    return turnBelts
 end
