@@ -594,7 +594,7 @@ local function gotStaticData(self, dataTable)
     end
 
     -- Needs to wait for the server to initialize fully!
-    self.warmUpTimer = 5
+    self.warmUpTimer = 3
 end
 
 local function noStaticData(self)
