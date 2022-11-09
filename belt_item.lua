@@ -234,6 +234,7 @@ function beltItem:movement(object)
         integerPosition.y = integerPosition.y - 1
         frontNodeIdentity = getNode(integerPosition)
         frontBeltName = extractName(frontNodeIdentity)
+
         frontBeltSpeed, frontBeltAngle = beltSwitch:match(frontBeltName)
 
         if not frontBeltSpeed then return false end
@@ -250,16 +251,23 @@ function beltItem:movement(object)
 
     if not frontBeltSpeed then return false end
 
+
+    -- These need an additional check because it's a mess
     -- Upward belt logic flow
     if frontBeltAngle == 45 or beltAngle == 45 then
         newPosition.y = newPosition.y + beltSpeed
+
+        frontNodeIdentity = getNode(newPosition)
+        frontBeltName = extractName(frontNodeIdentity)
+
+        if flatBeltSwitch:match(frontBeltName) then
+            newPosition.y = math.floor(newPosition.y)
+        end
     
-    -- Downwards belt logic flow - This needs an additional check because it's a mess
+    -- Downwards belt logic flow 
     elseif frontBeltAngle == -45 or beltAngle == -45 then
 
         newPosition.y = newPosition.y - beltSpeed
-        
-        -- Here is the additional check
 
         frontNodeIdentity = getNode(newPosition)
         frontBeltName = extractName(frontNodeIdentity)
