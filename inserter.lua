@@ -235,7 +235,7 @@ local bootSwitch = switch:new({
             self:setAnimation("selfTest")
             self:resetAnimationTimer()
             self.bootStage = self.bootStage + 1;
-            playSound("tech_inserter_startup", {pos=self.position})
+            playSound("tech_inserter_startup", {pos=self.position, gain = 0.25})
         end
     end,
     [1] = function(self)
@@ -243,7 +243,7 @@ local bootSwitch = switch:new({
             self:setAnimation("fullyInitialize")
             self:resetAnimationTimer()
             self.bootStage = self.bootStage + 1;
-            playSound("tech_inserter_stage_2", {pos=self.position})
+            playSound("tech_inserter_stage_2", {pos=self.position, gain = 0.25})
         end
     end,
     [2] = function(self)
@@ -531,8 +531,8 @@ local productionSwitch = switch:new({
         if searchInput(self) then
             self.animationTimer = 0
             self.productionStage = 1
-            playSound("tech_grab", {pos = self.position})
-            playSound("tech_inserter_stage_1", {pos = self.position})
+            playSound("tech_grab", {pos = self.position, gain = 0.25})
+            playSound("tech_inserter_stage_1", {pos = self.position, gain = 0.25})
         end
     end,
     -- Swinging forward, animation stage
@@ -547,8 +547,8 @@ local productionSwitch = switch:new({
         if searchOutput(self) then
             self.animationTimer = 0
             self.productionStage = 3
-            playSound("tech_release", {pos = self.position})
-            playSound("tech_inserter_stage_2", {pos = self.position})
+            playSound("tech_release", {pos = self.position, gain = 0.25})
+            playSound("tech_inserter_stage_2", {pos = self.position, gain = 0.25})
         end
     end,
     -- Swinging backward, animation stage
@@ -615,12 +615,7 @@ local function noStaticData(self)
         self.visual = itemEntityVisual
     end
 
-    playSound(
-        "tech_inserter_stage_1",
-        {
-            pos = self.position
-        }
-    )
+    playSound("tech_inserter_stage_1",{pos = self.position, gain = 0.25})
 end
 
 function inserter:on_activate(staticData)
