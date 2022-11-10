@@ -30,7 +30,7 @@ local registeredNodes      = minetest.registered_nodes
 local registeredItems      = minetest.registered_items --? Why are these two different?
 local registeredCraftItems = minetest.registered_craftitems
 local newVec               = vector.new
-local zeroVec              = vector.zero
+local vecZero              = vector.zero
 local vecMultiply          = vector.multiply
 local vecAdd               = vector.add
 

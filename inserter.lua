@@ -32,7 +32,7 @@ local registeredNodes      = minetest.registered_nodes
 local registeredItems      = minetest.registered_items --? Why are these two different?
 local registeredCraftItems = minetest.registered_craftitems
 local newVec               = vector.new
-local zeroVec              = vector.zero
+local vecZero              = vector.zero
 local vecMultiply          = vector.multiply
 local vecAdd               = vector.add
 local vecSubtract          = vector.subtract
@@ -203,7 +203,7 @@ local inserter = {
         },
         visual_size = newVec(inserterSize, inserterSize, inserterSize),
     },
-    position = zeroVec(),
+    position = vecZero(),
     animationTimer = 0.0,
     boot = true,
     bootStage = 0,
@@ -588,7 +588,7 @@ local function gotStaticData(self, dataTable)
 
     if itemEntityVisual then
 
-        itemEntityVisual:set_attach(self.object, "grabber", newVec(0,4,0), zeroVec(), false)
+        itemEntityVisual:set_attach(self.object, "grabber", newVec(0,4,0), vecZero(), false)
 
         self.visual = itemEntityVisual
 
@@ -611,7 +611,7 @@ local function noStaticData(self)
 
     local itemEntityVisual = addEntity(self.position, "tech:inserterVisual", "new")
     if itemEntityVisual then
-        itemEntityVisual:set_attach(self.object, "grabber", newVec(0,4,0), zeroVec(), false)
+        itemEntityVisual:set_attach(self.object, "grabber", newVec(0,4,0), vecZero(), false)
         self.visual = itemEntityVisual
     end
 
