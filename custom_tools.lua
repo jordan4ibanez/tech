@@ -233,12 +233,14 @@ function math.fma( x, y, z)
     return (x * y) + z
 end
 local fma = math.fma
+local vecZero = vector.zero
+--* Interpolation amount is a value in range of 0.0 to 1.0
 function vector.lerp(vectorOrigin, vectorDestination, interpolationAmount)
-    local outputVector = vector.zero()
-    outputVector.x = fma(vectorDestination.x - vectorOrigin.x, interpolationAmount, vectorOrigin.x);
-    outputVector.y = fma(vectorDestination.y - vectorOrigin.y, interpolationAmount, vectorOrigin.y);
-    outputVector.z = fma(vectorDestination.z - vectorOrigin.z, interpolationAmount, vectorOrigin.z);
-    return outputVector;
+    local outputVector = vecZero()
+    outputVector.x = fma(vectorDestination.x - vectorOrigin.x, interpolationAmount, vectorOrigin.x)
+    outputVector.y = fma(vectorDestination.y - vectorOrigin.y, interpolationAmount, vectorOrigin.y)
+    outputVector.z = fma(vectorDestination.z - vectorOrigin.z, interpolationAmount, vectorOrigin.z)
+    return outputVector
 end
 
 
