@@ -40,6 +40,7 @@ local vecAdd               = vector.add
 local vecFloor             = vector.floor
 local vecRound             = vector.round
 local vecDirection         = vector.direction
+local vecLerp              = vector.lerp
 local serialize            = minetest.serialize
 local deserialize          = minetest.deserialize
 local objectsInRadius      = minetest.get_objects_inside_radius
@@ -65,6 +66,9 @@ local beltItem = {
         textures = {""},
         is_visible = false,
     },
+    originPosition = zeroVec(),
+    destinationPosition = zeroVec(),
+    movementProgress = 0,
     lane = 0,
     itemString = "",
     direction = 0,
@@ -168,7 +172,19 @@ local function getDirectionTurn(newRotation, currentRotation, currentLane)
 end
 
 -- Todo: Rewrite this mess with a headway position
-function beltItem:movement(object)
+function beltItem:movement(object, delta)
+    
+    self.movementProgress = self.movementProgress + delta
+
+    if self.movementProgress >= 1 then
+        self.movementProgress = 0
+    end
+
+    local newPosition = vecLerp(self.originPosition, self.destinationPosition, self.movementProgress)
+
+    object:move_to(newPosition)
+
+    debugParticle(self.debugPosition)
 
     --[[
     local position = object:get_pos()
@@ -390,7 +406,7 @@ end
 
 function beltItem:on_step(delta)
     local object = self.object
-    self:movement(object)
+    self:movement(object, delta)
 end
 
 
@@ -415,6 +431,18 @@ function beltItem:on_activate(staticData)
     if dataTable then
         gotStaticData(self, dataTable)
     end
+
+    -- Debug
+    local position = vecRound(self.object:get_pos())
+
+    self.debugPosition = position
+
+    self.originPosition = newVec(
+        position.x - 1, position.y, position.z
+    )
+    self.destinationPosition = newVec(
+        position.x + 1, position.y, position.z
+    )
 end
 
 -- Automate static data serialization
