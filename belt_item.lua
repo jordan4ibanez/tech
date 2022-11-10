@@ -170,6 +170,7 @@ end
 -- Todo: Rewrite this mess with a headway position
 function beltItem:movement(object)
 
+    --[[
     local position = object:get_pos()
     local nodeIdentity = getNode(newVec(
         position.x, position.y - 0.5, position.z
@@ -383,6 +384,7 @@ function beltItem:movement(object)
     end
 
     object:move_to(newPosition, false)
+    ]]
 end
 
 
