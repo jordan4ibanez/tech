@@ -228,9 +228,17 @@ local function ternary(case, option1, option2)
     end
 end
 
--- I'm actually surprised this is missing from both LuaJIT and Minetest
+-- I'm actually surprised these two functions are missing from both LuaJIT and Minetest
 function math.fma( x, y, z)
     return (x * y) + z
+end
+local fma = math.fma
+function vector.lerp(vectorOrigin, vectorDestination, interpolationAmount)
+    local outputVector = vector.zero()
+    outputVector.x = fma(vectorDestination.x - vectorOrigin.x, interpolationAmount, vectorOrigin.x);
+    outputVector.y = fma(vectorDestination.y - vectorOrigin.y, interpolationAmount, vectorOrigin.y);
+    outputVector.z = fma(vectorDestination.z - vectorOrigin.z, interpolationAmount, vectorOrigin.z);
+    return outputVector;
 end
 
 
