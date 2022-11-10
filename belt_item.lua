@@ -204,33 +204,34 @@ function beltItem:updatePosition(position, movementProgress)
 
     if not movementProgress then self.movementProgress = 0 end
 
-    self.integerPosition = vecRound(position)
-    
+    local integerPosition = vecRound(position)
     local nodeIdentity = getNode(self.integerPosition)
     local nodeName     = extractName(nodeIdentity)
 
-    if not beltSwitch:match(nodeName) then return end
+    if not beltSwitch:match(nodeName) then return false end
 
+    self.integerPosition = integerPosition
     local nodeDirection = extractDirection(nodeIdentity)
 
     if flatBeltSwitch:match(nodeName) then
 
+        --! Do a direction change check here
+
         -- Due to how this was set up, this is inverted
         local inverseDirection = vecMultiply(fourDirToDir(nodeDirection), 0.5)
         local direction = vecMultiply(inverseDirection, -1)
-        
         -- Set the rigid inline positions - They are on the center of the node
-        local originPosition      = vecAdd(self.integerPosition, inverseDirection)
-        local destinationPosition = vecAdd(self.integerPosition, direction)
-        
+        local originPosition      = vecAdd(integerPosition, inverseDirection)
+        local destinationPosition = vecAdd(integerPosition, direction)
         -- The lane is 90 degrees adjacent to the direction
         local directionModifier = ternary(self.lane == 1, 1, -1) * (math.pi / 2)
         local yaw = dirToYaw(direction) + directionModifier
         local laneDirection = vecMultiply(vecRound(yawToDir(yaw)), 0.25)
-
+        -- Finally set the positions
         self.originPosition      = vecAdd(originPosition, laneDirection)
         self.destinationPosition = vecAdd(destinationPosition, laneDirection)
 
+        return true
     end
 end
 
