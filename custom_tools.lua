@@ -228,6 +228,13 @@ local function ternary(case, option1, option2)
     end
 end
 
+-- I'm actually surprised this is missing from both LuaJIT and Minetest
+function math.fma( x, y, z)
+    return (x * y) + z
+end
+
+
+
 
 -- There are two ways to do this: _, _, _ or {_, _, _}. I like the second one better
 return {
