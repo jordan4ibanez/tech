@@ -33,6 +33,8 @@ local registerCraftItem    = minetest.register_craftitem
 local registeredNodes      = minetest.registered_nodes
 local registeredItems      = minetest.registered_items --? Why are these two different?
 local registeredCraftItems = minetest.registered_craftitems
+local dirToYaw             = minetest.dir_to_yaw
+local yawToDir             = minetest.yaw_to_dir
 local newVec               = vector.new
 local vecZero              = vector.zero
 local vecMultiply          = vector.multiply
@@ -66,6 +68,7 @@ local beltItem = {
         textures = {""},
         is_visible = false,
     },
+    integerPosition = vecZero(),
     originPosition = vecZero(),
     destinationPosition = vecZero(),
     movementProgress = 0,
@@ -107,6 +110,7 @@ end
 
 function beltItem:setLane(lane)
     self.lane = lane
+    write("I am on lane ", lane)
 end
 
 
@@ -173,6 +177,16 @@ end
 
 -- Todo: Rewrite this mess with a headway position
 function beltItem:movement(object, delta)
+
+    debugParticle(self.integerPosition)
+    if self.originPosition then
+        debugParticle(self.originPosition)
+        debugParticle(self.destinationPosition)
+    end
+
+    
+
+    --! This is old debug reference material
     
     self.movementProgress = self.movementProgress + delta
 
@@ -182,10 +196,42 @@ function beltItem:movement(object, delta)
 
     local newPosition = vecLerp(self.originPosition, self.destinationPosition, self.movementProgress)
 
-    object:move_to(newPosition)
+    object:set_pos(newPosition)
 
-    debugParticle(self.debugPosition)
+end
 
+function beltItem:updatePosition(position, movementProgress)
+
+    if not movementProgress then self.movementProgress = 0 end
+
+    self.integerPosition = vecRound(position)
+    
+    local nodeIdentity = getNode(self.integerPosition)
+    local nodeName     = extractName(nodeIdentity)
+
+    if not beltSwitch:match(nodeName) then return end
+
+    local nodeDirection = extractDirection(nodeIdentity)
+
+    if flatBeltSwitch:match(nodeName) then
+
+        -- Due to how this was set up, this is inverted
+        local inverseDirection = vecMultiply(fourDirToDir(nodeDirection), 0.5)
+        local direction = vecMultiply(inverseDirection, -1)
+        
+        -- Set the rigid inline positions - They are on the center of the node
+        local originPosition      = vecAdd(self.integerPosition, inverseDirection)
+        local destinationPosition = vecAdd(self.integerPosition, direction)
+        
+        -- The lane is 90 degrees adjacent to the direction
+        local directionModifier = ternary(self.lane == 1, 1, -1) * (math.pi / 2)
+        local yaw = dirToYaw(direction) + directionModifier
+        local laneDirection = vecMultiply(vecRound(yawToDir(yaw)), 0.25)
+
+        self.originPosition      = vecAdd(originPosition, laneDirection)
+        self.destinationPosition = vecAdd(destinationPosition, laneDirection)
+
+    end
 end
 
 
@@ -206,6 +252,8 @@ end
 
 -- When the object comes into existence
 function beltItem:on_activate(staticData)
+
+    write(staticData)
 
     -- Something went horribly wrong
     if not staticData then self.object:remove() return end
