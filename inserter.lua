@@ -491,8 +491,9 @@ local function searchOutput(self)
         beltEntity = beltEntity:get_luaentity()
 
         beltEntity:setItem(self.holding)
-
         beltEntity:setLane(lane)
+        -- 0.5 progress because this item is directly on the center position
+        beltEntity:updatePosition(lanePosition, 0.5)
 
         self.holding = ""
 
