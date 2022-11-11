@@ -372,7 +372,7 @@ local function searchInput(self)
         local positionAdjustment = vecMultiply(internalDirection, 0.25)
         local lanePosition = vecSubtract(self.input, positionAdjustment)
 
-        local gottenObject = objectsInRadius(lanePosition, 0.2)
+        local gottenObject = objectsInRadius(lanePosition, 0.5)
         if not gottenObject then return false end
         if #gottenObject <= 0 then return false end
         gottenObject = gottenObject[1]
@@ -483,7 +483,7 @@ local function searchOutput(self)
         if not lane then return false end
         local positionAdjustment = vecMultiply(internalDirection, 0.25)
         local lanePosition = vecSubtract(self.output, positionAdjustment)
-        if not findRoom(lanePosition, 0.2) then return false end
+        if not findRoom(lanePosition, 0.45) then return false end
 
         local beltEntity = addEntity(lanePosition, "tech:beltItem", "new")
 
