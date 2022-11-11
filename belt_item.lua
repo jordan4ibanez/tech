@@ -115,7 +115,6 @@ end
 
 function beltItem:setLane(lane)
     self.lane = lane
-    write("I am on lane ", lane)
 end
 
 
