@@ -219,11 +219,11 @@ end
 local function resolveBeltEntity(self, object)
     if not object then return false end
     if isPlayer(object) then return false end
-    local gottenEntity = object:get_luaentity()
-    if not gottenEntity then return false end
-    if not gottenEntity.name then return false end
-    if gottenEntity == self then return false end
-    if gottenEntity.name == "tech:beltItem" then return true end
+    object = object:get_luaentity()
+    if not object then return false end
+    if not object.name then return false end
+    if object == self then return false end
+    if object.name == "tech:beltItem" then return true end
 end
 
 function beltItem:findRoom(searchingPosition, radius)
