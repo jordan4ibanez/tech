@@ -289,6 +289,7 @@ function beltItem:updatePosition(pos, initialPlacement)
     local storageDestinationPosition
     local storageMovementProgress
     local laneStorage = self.lane
+    local turning = false
 
     if beltAngle == 45 then
         -- Do things
@@ -350,6 +351,8 @@ function beltItem:updatePosition(pos, initialPlacement)
             if not storageMovementProgress then
                 storageMovementProgress = 0
             end
+
+            turning = true
         end
     end
 
@@ -364,6 +367,17 @@ function beltItem:updatePosition(pos, initialPlacement)
     self.destinationPosition = storageDestinationPosition
     self.movementProgress    = storageMovementProgress
     self.lane                = laneStorage
+
+    if turning then
+        local object = self.object
+        local rotation = object:get_yaw()
+        if rotation ~= 0 then
+            rotation = 0
+        else
+            rotation = math.pi / 2
+        end
+        object:set_yaw(rotation)
+    end
     
     return true
 end
