@@ -83,6 +83,10 @@ local flatBelts            = grabFlatBelts()
 
 ]]
 
+local tierColors = {
+    "gold", "firebrick", "aqua"
+}
+
 -- Comment is the node rotation
 local laneSwitch = simpleSwitch:new({
     -- 0
@@ -158,6 +162,7 @@ createContainerItem("input", "default:furnace"       , "dst")
 createContainerItem("input", "default:furnace_active", "dst")
 
 
+for tier = 1,3 do
 
 
 local unpackVec2          = immutable(vec2(1,20))
@@ -168,19 +173,19 @@ local reachBackwardVec2   = immutable(vec2(80,100))
 
 local inserterAnimations  = switch:new({
     unpack   = function()
-        return unpackVec2, 20, 0, false
+        return unpackVec2, 20 * tier, 0, false
     end,
     selfTest = function()
-        return selfTestVec2, 60, 0, false
+        return selfTestVec2, 60 * tier, 0, false
     end,
     fullyInitialize = function()
-        return fullyInitializeVec2, 30, 0, false
+        return fullyInitializeVec2, 30 * tier, 0, false
     end,
     reachForward = function()
-        return reachForwardVec2, 30, 0, false
+        return reachForwardVec2, 30 * tier, 0, false
     end,
     reachBackward = function()
-        return reachBackwardVec2, 30, 0, false
+        return reachBackwardVec2, 30 * tier, 0, false
     end
 })
 
@@ -199,7 +204,7 @@ local inserter = {
         visual = "mesh",
         mesh = "inserter.b3d",
         textures = {
-            "default_dirt.png"
+            buildString("inserter_tier_", tier, ".png")
         },
         visual_size = newVec(inserterSize, inserterSize, inserterSize),
     },
@@ -221,7 +226,7 @@ function inserter:setAnimation(animation)
 end
 
 function inserter:animationTick(delta)
-    self.animationTimer = self.animationTimer + delta
+    self.animationTimer = self.animationTimer + (delta * tier)
     return self.animationTimer
 end
 function inserter:resetAnimationTimer()
@@ -670,7 +675,7 @@ function inserter:on_punch()
 end
 
 
-registerEntity("tech:inserter", inserter)
+registerEntity(buildString("tech:inserter_", tier), inserter)
 
 
 
@@ -685,8 +690,8 @@ registerEntity("tech:inserter", inserter)
 --! Beginning of the inserter item
 
 local inserterItem = {
-    description     = "inserter",
-    inventory_image = "inserter.png"
+    description     = buildString("Inserter Tier ", tier),
+    inventory_image = buildString("inserter.png", "^[colorize:", tierColors[tier], ":100")
 }
 
 local function adjustPlacement(inputPosition)
@@ -705,7 +710,7 @@ function inserterItem:on_place(placer, pointedThing)
     local yaw     = convertFourDirToYaw(fourDir)
     local above   = pointedThing.above
 
-    local inserterObject = addEntity(adjustPlacement(above), "tech:inserter")
+    local inserterObject = addEntity(adjustPlacement(above), buildString("tech:inserter_", tier))
 
     if inserterObject then
         inserterObject:set_rotation(
@@ -729,4 +734,6 @@ function inserterItem:on_place(placer, pointedThing)
     end
 end
 
-registerCraftItem("tech:inserter", inserterItem)
+registerCraftItem(buildString("tech:inserter_", tier), inserterItem)
+
+end
