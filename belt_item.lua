@@ -74,7 +74,7 @@ local beltItem = {
     originPosition      = vecZero(),
     destinationPosition = vecZero(),
     movementProgress    = 0,
-
+    speed = 0,
     lane = 0,
     itemString = "",
     direction = 0,
@@ -192,45 +192,77 @@ function beltItem:movement(object, delta)
 
     debugParticle(self.integerPosition)
 
+    --! This is debug
     if self.originPosition then
-        -- write("doing")
-        --write(self.originPosition)
         debugParticle(self.originPosition)
         debugParticle(self.destinationPosition)
         debugParticle(self.nextIntegerPosition)
     end
 
-    local movementProgress = self.movementProgress
-
-    movementProgress = movementProgress + delta
-    
-    if movementProgress >= 1 then
-        movementProgress = 0
+    -- Still moving along the belt
+    if self.movementProgress < 1 then
+        self.movementProgress = self.movementProgress + delta
+        if self.movementProgress >= 1 then
+            self.movementProgress = 1
+        end
+    else
+        -- Has to be inverted due to logic gate
+        failure = not self:updatePosition(self.nextIntegerPosition)
     end
-    
 
-    -- local newPosition = vecLerp(self.originPosition, self.destinationPosition, self.movementProgress)
+    if failure then return false end
 
-    -- object:set_pos(newPosition)
+    local newPosition = vecLerp(self.originPosition, self.destinationPosition, self.movementProgress)
+    object:move_to(newPosition)
 end
 
+local function resolveBeltEntity(self, object)
+    if not object then return false end
+    if isPlayer(object) then return false end
+    local gottenEntity = object:get_luaentity()
+    if not gottenEntity then return false end
+    if not gottenEntity.name then return false end
+    if gottenEntity == self then return false end
+    if gottenEntity.name == "tech:beltItem" then return true end
+end
+
+function beltItem:findRoom(searchingPosition, radius)
+    local objects = objectsInRadius(searchingPosition, radius)
+    for _,gottenObject in ipairs(objects) do
+        if resolveBeltEntity(self, gottenObject) then
+            return false
+        end
+    end
+    return true
+end
+
+--* Returns true if could update, false if failure
 function beltItem:updatePosition(position, movementProgress)
 
+    -- Save old values on stack
+    local oldMovementProgress = self.movementProgress
+    local oldIntegerPosition  = self.integerPosition
+    
     if not movementProgress then self.movementProgress = 0 end
 
     self.integerPosition = vecRound(position)
-
     local nodeIdentity = getNode(self.integerPosition)
     local nodeName     = extractName(nodeIdentity)
 
-    -- Something has gone extremely wrong if this is on the intial position
-    if not beltSwitch:match(nodeName) then return false end
+    --! Something has gone extremely wrong if this is on the intial position
+    if not beltSwitch:match(nodeName) then
+        -- Switch back to old position and progress
+        self.integerPosition  = oldIntegerPosition
+        self.movementProgress = oldMovementProgress
+        return false
+    end
 
     local nodeDirection = extractDirection(nodeIdentity)
 
     if flatBeltSwitch:match(nodeName) then
 
-        --! Do a direction change check here
+        --! Do a lane change check here
+
         local vectorDirection = fourDirToDir(nodeDirection)
         -- Due to how this was set up, this is inverted
         local inverseDirection = vecMultiply(vectorDirection, 0.5)
@@ -249,6 +281,28 @@ function beltItem:updatePosition(position, movementProgress)
         self.destinationPosition = vecAdd(destinationPosition, laneDirection)
 
         return true
+
+    elseif turnBeltSwitch:match(nodeName) then
+
+        --! Set up a new movement progress here
+
+        -- This gets no direction check because it keeps the lane
+        local vectorDirection = fourDirToDir(nodeDirection)
+        -- Due to how this was set up, this is inverted
+        local inverseDirection = vecMultiply(vectorDirection, 0.5)
+        local direction = vecMultiply(inverseDirection, -1)
+        -- Store movement direction for external functions
+        self.nextIntegerPosition = vecAdd(self.integerPosition, vecMultiply(vectorDirection, -1))
+        -- Set the rigid inline positions - They are on the center of the node
+        local originPosition      = vecAdd(self.integerPosition, inverseDirection)
+        local destinationPosition = vecAdd(self.integerPosition, direction)
+        -- The lane is 90 degrees adjacent to the direction
+        local directionModifier = ternary(self.lane == 1, 1, -1) * (math.pi / 2)
+        local yaw = dirToYaw(direction) + directionModifier
+        local laneDirection = vecMultiply(vecRound(yawToDir(yaw)), 0.25)
+        -- Finally set the positions
+        self.originPosition      = vecAdd(originPosition, laneDirection)
+        self.destinationPosition = vecAdd(destinationPosition, laneDirection)
     end
 end
 
