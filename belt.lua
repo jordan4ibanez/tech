@@ -3,6 +3,7 @@ local rootPath, customTools = ...
 -- Jordan4ibanez functions
 local buildString          = customTools.buildString
 local switch               = customTools.switch
+local simpleSwitch         = customTools.simpleSwitch
 local boolSwitch           = customTools.boolSwitch
 local write                = customTools.write
 local immutable            = customTools.immutable
@@ -15,6 +16,7 @@ local vec2                 = customTools.vec2
 local entityFloor          = customTools.entityFloor
 local extractName          = customTools.extractName
 local extractDirection     = customTools.extractDirection
+local ternary              = customTools.ternary
 
 -- Minetest functions
 local registerNode         = minetest.register_node
@@ -62,6 +64,7 @@ local definition = {
     paramtype  = "light",
     paramtype2 = "facedir",
     drawtype   = "mesh",
+    description = buildString("Belt Tier ", beltSpeed, " Turn"),
     mesh = "belt_0.b3d",
     tiles = {
         buildString("belt_",beltSpeed,"_turn.png")
@@ -101,11 +104,18 @@ for _,beltAngle in immutableIpairs(beltAngles) do
         return beltSpeed, beltAngle
     end
 
+    local angleSwitch = simpleSwitch:new({
+        [0]   = "Flat",
+        [45]  = "Upward",
+        [-45] = "Downward"
+    })
+
     -- Todo: Make belts act like rails
     local definition = {
         paramtype  = "light",
         paramtype2 = "facedir",
         drawtype   = "mesh",
+        description = buildString("Belt Tier ", beltSpeed, " ", angleSwitch:match(beltAngle)),
         mesh = buildString("belt_", angleConversion, ".b3d"),
         tiles = {
             buildString("belt_",beltSpeed,".png")
