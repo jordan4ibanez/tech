@@ -181,6 +181,13 @@ end
 -- Todo: Rewrite this mess with a headway position
 function beltItem:movement(object, delta)
 
+    -- Initial scan the belt is is on
+    if not beltSwitch:match(getNode(self.integerPosition).name) then
+        addItem(self.integerPosition, self.itemString)
+        object:remove()
+        return false
+    end
+
     local failure = false
 
     debugParticle(self.integerPosition)
