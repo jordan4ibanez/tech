@@ -128,17 +128,17 @@ local directionSwitch = simpleSwitch:new({
 -- Comment is the node rotation
 local directionChangeSwitch = simpleSwitch:new({
     -- 0
-    ["1 2"] = 1,
-    ["3 2"] = 2,
+    ["1 2"] = 2,
+    ["3 2"] = 1,
     -- 1
-    ["2 3"] = 1,
-    ["0 3"] = 2,
+    ["2 3"] = 2,
+    ["0 3"] = 1,
     -- 2
-    ["3 0"] = 1,
-    ["1 0"] = 2,
+    ["3 0"] = 2,
+    ["1 0"] = 1,
     -- 3
-    ["0 1"] = 1,
-    ["2 1"] = 2
+    ["0 1"] = 2,
+    ["2 1"] = 1
 })
 
 local function getDirectionChangeLane(newRotation, currentRotation)
@@ -222,7 +222,7 @@ function beltItem:movement(object, delta)
     -- Still moving along the belt
     local oldProgress = self.movementProgress
     if self.movementProgress < 1 then
-        self.movementProgress = self.movementProgress + 0.25
+        self.movementProgress = self.movementProgress + delta
         if self.movementProgress >= 1 then
             self.movementProgress = 1
         end
@@ -250,14 +250,14 @@ function beltItem:setMovementProgress(movementProgress)
     self.movementProgress = movementProgress
 end
 
---* Returns true if could update, false if failure
+--* Returns true if could update, false if failure. This is getting the direction on the NEXT node
 function beltItem:updatePosition(pos)
     -- Create a new heap object
     local position = vecCopy(pos)
 
     local integerPosition = vecRound(position)
-    local nodeIdentity = getNode(integerPosition)
-    local nodeName     = extractName(nodeIdentity)
+    local nodeIdentity  = getNode(integerPosition)
+    local nodeName      = extractName(nodeIdentity)
 
     --! Something has gone extremely wrong if this is on the intial position
 
@@ -276,15 +276,18 @@ function beltItem:updatePosition(pos)
         if not beltSpeed or beltAngle ~= -45 then
             return false
         end
+
     end
 
-    local nodeDirection = extractDirection(nodeIdentity)
+    local nodeDirection     = extractDirection(nodeIdentity)
+    local oldNodeDirection  = extractDirection(getNode(self.integerPosition))
 
     local storageIntegerPosition
     local storageNextIntegerPosition
     local storageOriginPosition
     local storageDestinationPosition
     local storageMovementProgress
+    local laneStorage
 
     if beltAngle == 45 then
         -- Do things
@@ -294,10 +297,19 @@ function beltItem:updatePosition(pos)
         write("Wow, a -45 belt")
     elseif flatBeltSwitch:match(nodeName) then
 
-        --! Do a lane change check here
+        local doLanePositionCalculation = false
 
-        --! If straight to straight then RESET the progress
-        storageMovementProgress = 0
+        -- Going straight
+        if nodeDirection == oldNodeDirection then
+            storageMovementProgress = 0
+        else
+            local newLane = getDirectionChangeLane(nodeDirection, oldNodeDirection)
+            if not newLane then return false end
+            laneStorage = newLane
+
+            storageMovementProgress = 0
+        end
+        
 
         local vectorDirection = fourDirToDir(nodeDirection)
         -- Due to how this was set up, this is inverted
@@ -307,7 +319,7 @@ function beltItem:updatePosition(pos)
         local originPosition      = vecAdd(integerPosition, inverseDirection)
         local destinationPosition = vecAdd(integerPosition, direction)
         -- The lane is 90 degrees adjacent to the direction
-        local directionModifier = ternary(self.lane == 1, 1, -1) * (math.pi / 2)
+        local directionModifier = ternary(laneStorage == 1, 1, -1) * (math.pi / 2)
         local yaw = dirToYaw(direction) + directionModifier
         local laneDirection = vecMultiply(vecRound(yawToDir(yaw)), 0.25)
 
@@ -328,6 +340,7 @@ function beltItem:updatePosition(pos)
     self.originPosition      = storageOriginPosition
     self.destinationPosition = storageDestinationPosition
     self.movementProgress    = storageMovementProgress
+    self.lane                = laneStorage
     
     return true
 end
