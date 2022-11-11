@@ -253,15 +253,30 @@ function beltItem:updatePosition(position, movementProgress)
     local beltSpeed, beltAngle = beltSwitch:match(nodeName)
 
     if not beltSpeed then
-        -- Switch back to old position and progress
-        self.integerPosition  = oldIntegerPosition
-        self.movementProgress = oldMovementProgress
-        return false
+        -- Try to get a downward belt
+        position.y = position.y - 1
+        self.integerPosition = vecRound(position)
+        nodeIdentity = getNode(self.integerPosition)
+        nodeName     = extractName(nodeIdentity)
+
+        beltSpeed, beltAngle = beltSwitch:match(nodeName)
+
+        -- There's no downward belt there
+        if not beltSpeed or beltAngle ~= -45 then
+            -- Switch back to old position and progress
+            self.integerPosition  = oldIntegerPosition
+            self.movementProgress = oldMovementProgress
+            return false
+        end
     end
 
     local nodeDirection = extractDirection(nodeIdentity)
 
-    if flatBeltSwitch:match(nodeName) then
+    if beltAngle == 45 then
+        -- Do things
+    elseif beltAngle == -45 then
+        -- Do things
+    elseif flatBeltSwitch:match(nodeName) then
 
         --! Do a lane change check here
 
