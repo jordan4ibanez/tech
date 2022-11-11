@@ -68,10 +68,13 @@ local beltItem = {
         textures = {""},
         is_visible = false,
     },
-    integerPosition = vecZero(),
-    originPosition = vecZero(),
+
+    integerPosition     = vecZero(),
+    nextIntegerPosition = vecZero(),
+    originPosition      = vecZero(),
     destinationPosition = vecZero(),
-    movementProgress = 0,
+    movementProgress    = 0,
+
     lane = 0,
     itemString = "",
     direction = 0,
@@ -178,51 +181,58 @@ end
 -- Todo: Rewrite this mess with a headway position
 function beltItem:movement(object, delta)
 
+    local failure = false
+
     debugParticle(self.integerPosition)
+
     if self.originPosition then
+        -- write("doing")
+        --write(self.originPosition)
         debugParticle(self.originPosition)
         debugParticle(self.destinationPosition)
+        debugParticle(self.nextIntegerPosition)
     end
 
-    
+    local movementProgress = self.movementProgress
 
-    --! This is old debug reference material
+    movementProgress = movementProgress + delta
     
-    self.movementProgress = self.movementProgress + delta
-
-    if self.movementProgress >= 1 then
-        self.movementProgress = 0
+    if movementProgress >= 1 then
+        movementProgress = 0
     end
+    
 
-    local newPosition = vecLerp(self.originPosition, self.destinationPosition, self.movementProgress)
+    -- local newPosition = vecLerp(self.originPosition, self.destinationPosition, self.movementProgress)
 
-    object:set_pos(newPosition)
-
+    -- object:set_pos(newPosition)
 end
 
 function beltItem:updatePosition(position, movementProgress)
 
     if not movementProgress then self.movementProgress = 0 end
 
-    local integerPosition = vecRound(position)
+    self.integerPosition = vecRound(position)
+
     local nodeIdentity = getNode(self.integerPosition)
     local nodeName     = extractName(nodeIdentity)
 
+    -- Something has gone extremely wrong if this is on the intial position
     if not beltSwitch:match(nodeName) then return false end
 
-    self.integerPosition = integerPosition
     local nodeDirection = extractDirection(nodeIdentity)
 
     if flatBeltSwitch:match(nodeName) then
 
         --! Do a direction change check here
-
+        local vectorDirection = fourDirToDir(nodeDirection)
         -- Due to how this was set up, this is inverted
-        local inverseDirection = vecMultiply(fourDirToDir(nodeDirection), 0.5)
+        local inverseDirection = vecMultiply(vectorDirection, 0.5)
         local direction = vecMultiply(inverseDirection, -1)
+        -- Store movement direction for external functions
+        self.nextIntegerPosition = vecAdd(self.integerPosition, vecMultiply(vectorDirection, -1))
         -- Set the rigid inline positions - They are on the center of the node
-        local originPosition      = vecAdd(integerPosition, inverseDirection)
-        local destinationPosition = vecAdd(integerPosition, direction)
+        local originPosition      = vecAdd(self.integerPosition, inverseDirection)
+        local destinationPosition = vecAdd(self.integerPosition, direction)
         -- The lane is 90 degrees adjacent to the direction
         local directionModifier = ternary(self.lane == 1, 1, -1) * (math.pi / 2)
         local yaw = dirToYaw(direction) + directionModifier
