@@ -210,13 +210,13 @@ function beltItem:movement(object, delta)
 
     local failure = false
 
-    debugParticle(self.integerPosition)
+    --debugParticle(self.integerPosition)
 
     --! This is debug
     if self.originPosition then
-        debugParticle(self.originPosition)
-        debugParticle(self.destinationPosition)
-        debugParticle(self.nextIntegerPosition)
+        --debugParticle(self.originPosition)
+        --debugParticle(self.destinationPosition)
+        --debugParticle(self.nextIntegerPosition)
     end
     
 
@@ -266,18 +266,34 @@ function beltItem:updatePosition(pos, initialPlacement)
 
     if not beltSpeed then
 
+        local failure = false
+
         -- Try to get a downward belt
-        integerPosition.y = integerPosition.y - 1
-        nodeIdentity = getNode(integerPosition)
-        nodeName     = extractName(nodeIdentity)
+        do
+            integerPosition.y = integerPosition.y - 1
+            nodeIdentity = getNode(integerPosition)
+            nodeName     = extractName(nodeIdentity)
+            beltSpeed, beltAngle = beltSwitch:match(nodeName)
 
-        beltSpeed, beltAngle = beltSwitch:match(nodeName)
-
-        -- There's no downward belt there
-        if not beltSpeed or beltAngle ~= -45 then
-            return false
+            if not beltSpeed or beltAngle ~= -45 then
+                failure = true
+            end
         end
 
+        -- Try to get an upward belt - Fix this for upward belts glitch - get current belt angle
+        do
+            integerPosition.y = integerPosition.y + 2
+            nodeIdentity = getNode(integerPosition)
+            nodeName     = extractName(nodeIdentity)
+            beltSpeed, beltAngle = beltSwitch:match(nodeName)
+
+            if not beltSpeed or beltAngle ~= 45 then
+                failure = true
+            end
+        end
+
+        -- There are no belts
+        if failure then return false end
     end
 
     local nodeDirection     = extractDirection(nodeIdentity)
@@ -310,7 +326,6 @@ function beltItem:updatePosition(pos, initialPlacement)
             if not newLane then return false end
             laneStorage = newLane
         end
-        
 
         local vectorDirection = fourDirToDir(nodeDirection)
         -- Due to how this was set up, this is inverted
@@ -354,6 +369,51 @@ function beltItem:updatePosition(pos, initialPlacement)
 
             turning = true
         end
+    elseif turnBeltSwitch:match(nodeName) then
+
+        -- Turns can only turn
+        if nodeDirection == oldNodeDirection then return end
+
+        local vectorDirection = fourDirToDir(nodeDirection)
+        -- Due to how this was set up, this is inverted
+        local inverseDirection = vecMultiply(vectorDirection, 0.5)
+        local direction = vecMultiply(inverseDirection, -1)
+        -- Set the rigid inline positions - They are on the center of the node
+        local originPosition      = vecAdd(integerPosition, inverseDirection)
+        local destinationPosition = vecAdd(integerPosition, direction)
+        -- The lane is 90 degrees adjacent to the direction
+        local directionModifier = ternary(laneStorage == 1, 1, -1) * (math.pi / 2)
+        local yaw = dirToYaw(direction) + directionModifier
+        local laneDirection = vecMultiply(vecRound(yawToDir(yaw)), 0.25)
+
+        -- Now store the values outside this scope
+        storageIntegerPosition     = integerPosition
+        storageNextIntegerPosition = vecAdd(integerPosition, vecMultiply(vectorDirection, -1))
+        storageOriginPosition      = vecAdd(originPosition, laneDirection)
+        storageDestinationPosition = vecAdd(destinationPosition, laneDirection)
+
+        -- Needs to calculate a new offset to the direction
+
+        local floatingPosition = self.object:get_pos()
+
+        local start
+        local offset
+
+        if direction.x ~= 0 then
+            start  = storageOriginPosition.x
+            offset = floatingPosition.x - start
+            storageMovementProgress = abs(offset)
+        elseif direction.z ~= 0 then
+            start  = storageOriginPosition.z
+            offset = floatingPosition.z - start
+            storageMovementProgress = abs(offset)
+        end
+
+        if not storageMovementProgress then
+            storageMovementProgress = 0
+        end
+
+        turning = true
     end
 
     local newPosition = vecLerp(storageOriginPosition, storageDestinationPosition, storageMovementProgress)
