@@ -51,6 +51,7 @@ local isPlayer             = minetest.is_player
 
 -- Lua functions
 local floor = math.floor
+local abs   = math.abs
 
 -- Functions pulled out of thin air ~spooky~
 local beltSwitch = grabBeltSwitch()
@@ -251,7 +252,7 @@ function beltItem:setMovementProgress(movementProgress)
 end
 
 --* Returns true if could update, false if failure. This is getting the direction on the NEXT node
-function beltItem:updatePosition(pos)
+function beltItem:updatePosition(pos, initialPlacement)
     -- Create a new heap object
     local position = vecCopy(pos)
 
@@ -287,7 +288,7 @@ function beltItem:updatePosition(pos)
     local storageOriginPosition
     local storageDestinationPosition
     local storageMovementProgress
-    local laneStorage
+    local laneStorage = self.lane
 
     if beltAngle == 45 then
         -- Do things
@@ -300,14 +301,13 @@ function beltItem:updatePosition(pos)
         local doLanePositionCalculation = false
 
         -- Going straight
-        if nodeDirection == oldNodeDirection then
+        if initialPlacement or nodeDirection == oldNodeDirection then
             storageMovementProgress = 0
         else
             local newLane = getDirectionChangeLane(nodeDirection, oldNodeDirection)
+            doLanePositionCalculation = true
             if not newLane then return false end
             laneStorage = newLane
-
-            storageMovementProgress = 0
         end
         
 
@@ -328,6 +328,29 @@ function beltItem:updatePosition(pos)
         storageNextIntegerPosition = vecAdd(integerPosition, vecMultiply(vectorDirection, -1))
         storageOriginPosition      = vecAdd(originPosition, laneDirection)
         storageDestinationPosition = vecAdd(destinationPosition, laneDirection)
+
+        -- Needs to calculate a new offset to the direction
+        if doLanePositionCalculation then
+
+            local floatingPosition = self.object:get_pos()
+
+            local start
+            local offset
+
+            if direction.x ~= 0 then
+                start  = storageOriginPosition.x
+                offset = floatingPosition.x - start
+                storageMovementProgress = abs(offset)
+            elseif direction.z ~= 0 then
+                start  = storageOriginPosition.z
+                offset = floatingPosition.z - start
+                storageMovementProgress = abs(offset)
+            end
+
+            if not storageMovementProgress then
+                storageMovementProgress = 0
+            end
+        end
     end
 
     local newPosition = vecLerp(storageOriginPosition, storageDestinationPosition, storageMovementProgress)
@@ -363,8 +386,6 @@ end
 
 -- When the object comes into existence
 function beltItem:on_activate(staticData)
-
-    write(staticData)
 
     -- Something went horribly wrong
     if not staticData then self.object:remove() return end
