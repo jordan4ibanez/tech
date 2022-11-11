@@ -227,8 +227,7 @@ local function resolveBeltEntity(self, object)
 end
 
 function beltItem:findRoom(searchingPosition, radius)
-    local objects = objectsInRadius(searchingPosition, radius)
-    for _,gottenObject in ipairs(objects) do
+    for _,gottenObject in ipairs(objectsInRadius(searchingPosition, radius)) do
         if resolveBeltEntity(self, gottenObject) then
             return false
         end
