@@ -249,7 +249,10 @@ function beltItem:updatePosition(position, movementProgress)
     local nodeName     = extractName(nodeIdentity)
 
     --! Something has gone extremely wrong if this is on the intial position
-    if not beltSwitch:match(nodeName) then
+
+    local beltSpeed, beltAngle = beltSwitch:match(nodeName)
+
+    if not beltSpeed then
         -- Switch back to old position and progress
         self.integerPosition  = oldIntegerPosition
         self.movementProgress = oldMovementProgress
