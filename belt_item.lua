@@ -210,13 +210,13 @@ function beltItem:movement(object, delta)
 
     local failure = false
 
-    --debugParticle(self.integerPosition)
+    debugParticle(self.integerPosition)
 
     --! This is debug
     if self.originPosition then
-        --debugParticle(self.originPosition)
-        --debugParticle(self.destinationPosition)
-        --debugParticle(self.nextIntegerPosition)
+        debugParticle(self.originPosition)
+        debugParticle(self.destinationPosition)
+        debugParticle(self.nextIntegerPosition)
     end
     
 
@@ -259,45 +259,70 @@ function beltItem:updatePosition(pos, initialPlacement)
     local integerPosition = vecRound(position)
     local nodeIdentity  = getNode(integerPosition)
     local nodeName      = extractName(nodeIdentity)
+    local nodeDirection = extractDirection(nodeIdentity)
 
     --! Something has gone extremely wrong if this is on the intial position
-
     local beltSpeed, beltAngle = beltSwitch:match(nodeName)
 
-    if not beltSpeed then
+    -- Have to get old data or else there are A LOT of glitches
+    local oldNodeIdentity = getNode(self.integerPosition)
+    local oldNodeName     = extractName(oldNodeIdentity)
+    local oldNodeDirection  = extractDirection(oldNodeIdentity)
+    local oldBeltSpeed, oldBeltAngle = beltSwitch:match(oldNodeName)
+
+    local upGlitch = false
+    -- Some rigid logic gates for glitches, teleport & phasing
+    if oldBeltAngle == 45 and beltAngle == 0 then
+        -- write("glitch 1")
+        upGlitch = true
+    elseif oldBeltAngle == 45 and beltAngle == 45 then
+        -- write("glitch 2")
+        upGlitch = true
+    elseif beltAngle ~= 0 and oldNodeDirection ~= nodeDirection and beltAngle ~= nil then
+        -- write("glitch 3")
+        upGlitch = true
+    elseif oldBeltAngle == 0 and beltAngle == -45 then
+        -- write("glitch 4")
+        upGlitch = true
+    end
+    
+
+    if upGlitch or not beltSpeed then
 
         local failure = false
 
-        -- Try to get a downward belt
+        -- Try to get an upward belt - This takes priority
         do
-            integerPosition.y = integerPosition.y - 1
+            integerPosition.y = integerPosition.y + 1
             nodeIdentity = getNode(integerPosition)
             nodeName     = extractName(nodeIdentity)
+            nodeDirection = extractDirection(nodeIdentity)
             beltSpeed, beltAngle = beltSwitch:match(nodeName)
 
-            if not beltSpeed or beltAngle ~= -45 then
+            if not beltSpeed or beltAngle == -45 or (beltAngle == 0 and oldBeltAngle == nil) then
                 failure = true
             end
         end
 
-        -- Try to get an upward belt - Fix this for upward belts glitch - get current belt angle
-        do
-            integerPosition.y = integerPosition.y + 2
+        -- Try to get a downward belt
+        if failure then
+            integerPosition.y = integerPosition.y - 2
             nodeIdentity = getNode(integerPosition)
             nodeName     = extractName(nodeIdentity)
+            nodeDirection = extractDirection(nodeIdentity)
             beltSpeed, beltAngle = beltSwitch:match(nodeName)
 
-            if not beltSpeed or beltAngle ~= 45 then
+            if not beltSpeed or beltAngle ~= -45 then
                 failure = true
+            else
+                -- Success!
+                failure = false
             end
         end
 
         -- There are no belts
         if failure then return false end
     end
-
-    local nodeDirection     = extractDirection(nodeIdentity)
-    local oldNodeDirection  = extractDirection(getNode(self.integerPosition))
 
     local storageIntegerPosition
     local storageNextIntegerPosition
@@ -308,11 +333,52 @@ function beltItem:updatePosition(pos, initialPlacement)
     local turning = false
 
     if beltAngle == 45 then
-        -- Do things
-        write("Wow, a 45 belt")
+        local vectorDirection = fourDirToDir(nodeDirection)
+        -- Due to how this was set up, this is inverted
+        local inverseDirection = vecMultiply(vectorDirection, 0.5)
+        local direction = vecMultiply(inverseDirection, -1)
+        -- Set the rigid inline positions - They are on the center of the node
+        local originPosition      = vecAdd(integerPosition, inverseDirection)
+        local destinationPosition = vecAdd(integerPosition, direction)
+
+        -- Needs to have the height or else it'll just be silly
+        destinationPosition.y = destinationPosition.y + 1
+
+        -- The lane is 90 degrees adjacent to the direction
+        local directionModifier = ternary(laneStorage == 1, 1, -1) * (math.pi / 2)
+        local yaw = dirToYaw(direction) + directionModifier
+        local laneDirection = vecMultiply(vecRound(yawToDir(yaw)), 0.25)
+
+        -- Now store the values outside this scope
+        storageIntegerPosition     = integerPosition
+        storageNextIntegerPosition = vecAdd(integerPosition, vecMultiply(vectorDirection, -1))
+        storageOriginPosition      = vecAdd(originPosition, laneDirection)
+        storageDestinationPosition = vecAdd(destinationPosition, laneDirection)
+        storageMovementProgress    = 0
+
     elseif beltAngle == -45 then
-        -- Do things
-        write("Wow, a -45 belt")
+        local vectorDirection = fourDirToDir(nodeDirection)
+        -- Due to how this was set up, this is inverted
+        local inverseDirection = vecMultiply(vectorDirection, 0.5)
+        local direction = vecMultiply(inverseDirection, -1)
+        -- Set the rigid inline positions - They are on the center of the node
+        local originPosition      = vecAdd(integerPosition, inverseDirection)
+        local destinationPosition = vecAdd(integerPosition, direction)
+
+        -- Needs to have the height or else it'll just be silly
+        originPosition.y = originPosition.y + 1
+
+        -- The lane is 90 degrees adjacent to the direction
+        local directionModifier = ternary(laneStorage == 1, 1, -1) * (math.pi / 2)
+        local yaw = dirToYaw(direction) + directionModifier
+        local laneDirection = vecMultiply(vecRound(yawToDir(yaw)), 0.25)
+
+        -- Now store the values outside this scope
+        storageIntegerPosition     = integerPosition
+        storageNextIntegerPosition = vecAdd(integerPosition, vecMultiply(vectorDirection, -1))
+        storageOriginPosition      = vecAdd(originPosition, laneDirection)
+        storageDestinationPosition = vecAdd(destinationPosition, laneDirection)
+        storageMovementProgress    = 0
     elseif flatBeltSwitch:match(nodeName) then
 
         local doLanePositionCalculation = false
