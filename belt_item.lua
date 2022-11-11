@@ -210,20 +210,22 @@ function beltItem:movement(object, delta)
 
     local failure = false
 
-    debugParticle(self.integerPosition)
 
+    --[[
     --! This is debug
+    debugParticle(self.integerPosition)
     if self.originPosition then
         debugParticle(self.originPosition)
         debugParticle(self.destinationPosition)
         debugParticle(self.nextIntegerPosition)
     end
+    ]]
     
 
     -- Still moving along the belt
     local oldProgress = self.movementProgress
     if self.movementProgress < 1 then
-        self.movementProgress = self.movementProgress + delta
+        self.movementProgress = self.movementProgress + (delta * self.speed)
         if self.movementProgress >= 1 then
             self.movementProgress = 1
         end
@@ -493,6 +495,7 @@ function beltItem:updatePosition(pos, initialPlacement)
     self.destinationPosition = storageDestinationPosition
     self.movementProgress    = storageMovementProgress
     self.lane                = laneStorage
+    self.speed               = beltSpeed
 
     if turning then
         local object = self.object
