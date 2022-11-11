@@ -492,8 +492,9 @@ local function searchOutput(self)
 
         beltEntity:setItem(self.holding)
         beltEntity:setLane(lane)
+        beltEntity:updatePosition(lanePosition)
         -- 0.5 progress because this item is directly on the center position
-        beltEntity:updatePosition(lanePosition, 0.5)
+        beltEntity:setMovementProgress(0.5)
 
         self.holding = ""
 
