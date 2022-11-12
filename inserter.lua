@@ -439,6 +439,25 @@ local function examineOutputInventories(nodeName)
     return false
 end
 
+local function resolveBeltEntity(object)
+    if not object then return false end
+    if isPlayer(object) then return false end
+    object = object:get_luaentity()
+    if not object then return false end
+    if not object.name then return false end
+    if object.name == "tech:beltItem" then return true end
+end
+
+local function findRoom(searchingPosition, radius)
+    for _,gottenObject in ipairs(objectsInRadius(searchingPosition, radius)) do
+        if resolveBeltEntity(gottenObject) then
+            return false
+        end
+    end
+    return true
+end
+
+
 local function searchOutput(self)
     if not self.output then return false end
 
@@ -463,27 +482,13 @@ local function searchOutput(self)
 
     elseif flatBelts:match(nodeName) then
 
-        local function findRoom(position, radius)
-            local objects = objectsInRadius(position, radius)
-            for _,object in ipairs(objects) do
-                --! If you have an error here, complain to core devs about luajit versioning
-                if not object then goto continue end
-                if isPlayer(object) then goto continue end
-                local gottenEntity = object:get_luaentity()
-                if not gottenEntity then goto continue end
-                if not gottenEntity.name then goto continue end
-                if gottenEntity.name == "tech:beltItem" then return false end
-                ::continue::
-            end
-            return true
-        end
-
+        
         local internalDirection = vecDirection(self.position, self.output)
         local lane = getLane(internalDirection, nodeRotation)
         if not lane then return false end
         local positionAdjustment = vecMultiply(internalDirection, 0.25)
         local lanePosition = vecSubtract(self.output, positionAdjustment)
-        if not findRoom(lanePosition, 0.45) then return false end
+        if not findRoom(lanePosition, 0.3) then return false end
 
         local beltEntity = addEntity(lanePosition, "tech:beltItem", "new")
 
@@ -500,6 +505,7 @@ local function searchOutput(self)
         beltEntity:updatePosition(lanePosition, true)
         -- 0.5 progress because this item is directly on the center position
         beltEntity:setMovementProgress(0.5)
+        
 
         self.holding = ""
 
