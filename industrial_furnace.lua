@@ -82,7 +82,7 @@ local sideTopTextureString = buildString(
 )
 local topNodeNameString = buildString("tech:industrial_furnace_top_", tier)
 
--- Top is simply IO for smelting
+-- Top is IO for smelting & smelting control
 local topDefinition = {
     paramtype  = "light",
     drawtype   = "normal",
@@ -123,6 +123,7 @@ function topDefinition:on_place(placer, pointedThing)
     invTop:set_size("stock", 1)
     invTop:set_size("output", 4)
     metaTop:set_string("formspec", topFormSpec)
+    getTimer(top):start(0)
 
     local metaBottom = getMeta(bottom)
     local invBottom = metaBottom:get_inventory()
@@ -134,13 +135,35 @@ function topDefinition:on_place(placer, pointedThing)
     return self
 end
 
+local burnerGoalString = buildString("tech:industrial_furnace_bottom_", tier, "_3")
+
+local function checkBurner(position)
+    local pos = vecCopy(position)
+    pos.y = pos.y - 1
+    if getNode(pos).name == burnerGoalString then return true end
+    return false
+end
+
+function topDefinition:on_timer()
+    -- Try not to trash the game with 5 second intervals
+    local refreshTime = 5
+    if not checkBurner(self) then getTimer(self):start(refreshTime) return end
+
+    local node = getNode(self)
+    local meta = getMeta(self)
+    local inv  = meta:get_inventory()
+    local list = inv:get_list("source")
+    minetest.get_craft_result({method = "cooking", width = 1, items = list})
+
+end
+
 registerNode(
     topNodeNameString,
     topDefinition
 )
 
 
--- Bottom furnace is the brain, must be leveled to support swap_node
+-- Bottom furnace is the heat control, must be leveled
 for level = 0,3 do
 
 local sideBottomTextureString = buildString(
@@ -164,7 +187,6 @@ local bottomDefinition = {
         dig_immediate = 3
     },
 }
-
 
 local function takeFuel(stack, inv)
     stack:take_item(1)
@@ -193,16 +215,15 @@ function bottomDefinition:on_timer()
         refreshTime = 10 * tier
     --* Furnace burner is reaching higher level with fuel
     elseif level < 3 and fuelTime then
-        refreshTime = 10 / tier
+        refreshTime = 0.1--10 / tier
         node.name = buildString("tech:industrial_furnace_bottom_", tier, "_", level + 1)
         swapNode(self, node)
     --* Furnace burner has no fuel and starts to level down
     elseif level > 0 and not fuelTime then
-        refreshTime = 10 / tier
+        refreshTime = 0.1--10 / tier
         node.name = buildString("tech:industrial_furnace_bottom_", tier, "_", level - 1)
         swapNode(self, node)
     end
-
 
     getTimer(self):start(refreshTime)
 end
