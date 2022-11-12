@@ -147,38 +147,6 @@ local function getDirectionChangeLane(newRotation, currentRotation)
 end
 
 
--- Comment is the input belt's rotation
--- Value is movement amount, inner or outer, true is inner, false is outer
-local inner = 1
-local outer = 2
-local turnChangeSwitch = simpleSwitch:new({
-    --0
-    ["3 2 1"] = outer,
-    ["1 2 1"] = inner,
-    ["3 2 2"] = inner,
-    ["1 2 2"] = outer,
-    -- 1
-    ["0 3 1"] = outer,
-    ["2 3 1"] = inner,
-    ["0 3 2"] = inner,
-    ["2 3 2"] = outer,
-    -- 2
-    ["1 0 1"] = outer,
-    ["3 0 1"] = inner,
-    ["1 0 2"] = inner,
-    ["3 0 2"] = outer,
-    -- 3
-    ["2 1 1"] = outer,
-    ["0 1 1"] = inner,
-    ["2 1 2"] = inner,
-    ["0 1 2"] = outer
-})
-
-local function getDirectionTurn(newRotation, currentRotation, currentLane)
-    local case = buildString(currentRotation, " ", newRotation, " ", currentLane)
-    return turnChangeSwitch:match(case)
-end
-
 local function resolveBeltEntity(self, object)
     if not object then return false end
     if isPlayer(object) then return false end
@@ -240,12 +208,12 @@ function beltItem:movement(object, delta)
 
     local newPosition = vecLerp(self.originPosition, self.destinationPosition, self.movementProgress)
 
-    if not self:findRoom(newPosition, 0.45) then
+    if not self:findRoom(newPosition, 0.25) then
         self.movementProgress = oldProgress
         return
     end
 
-    object:move_to(newPosition)
+    object:move_to(newPosition, false)
 end
 
 function beltItem:setMovementProgress(movementProgress)
@@ -254,6 +222,7 @@ end
 
 --* Returns true if could update, false if failure. This is getting the direction on the NEXT node
 function beltItem:updatePosition(pos, initialPlacement)
+
     -- Create a new heap object
     local position = vecCopy(pos)
 
@@ -485,7 +454,10 @@ function beltItem:updatePosition(pos, initialPlacement)
 
     local newPosition = vecLerp(storageOriginPosition, storageDestinationPosition, storageMovementProgress)
 
-    if not self:findRoom(newPosition, 0.45) then return false end
+    
+    if not self:findRoom(newPosition, 0.25) and not initialPlacement then
+        return false
+    end
 
     -- If it found room, set the new values
     self.integerPosition     = storageIntegerPosition
