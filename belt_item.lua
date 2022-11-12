@@ -118,13 +118,6 @@ function beltItem:setLane(lane)
 end
 
 
-local directionSwitch = simpleSwitch:new({
-    [0] = immutable(vector.new( 0, 0,-1)),
-    [1] = immutable(vector.new(-1, 0, 0)),
-    [2] = immutable(vector.new( 0, 0, 1)),
-    [3] = immutable(vector.new( 1, 0, 0)),
-})
-
 -- Comment is the node rotation
 local directionChangeSwitch = simpleSwitch:new({
     -- 0
@@ -192,7 +185,7 @@ function beltItem:movement(object, delta)
     -- Still moving along the belt
     local oldProgress = self.movementProgress
     if self.movementProgress < 1 then
-        self.movementProgress = self.movementProgress + (delta * self.speed)
+        self.movementProgress = self.movementProgress + (self.speed / 10)
         if self.movementProgress >= 1 then
             self.movementProgress = 1
         end
