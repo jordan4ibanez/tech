@@ -372,6 +372,7 @@ local function searchInput(self)
         local positionAdjustment = vecMultiply(internalDirection, 0.25)
         local lanePosition = vecSubtract(self.input, positionAdjustment)
 
+        --! This causes a bug where the inserter passing the item onto the belt's neighbor can grab it instantly
         local gottenObject = objectsInRadius(lanePosition, 0.5)
         if not gottenObject then return false end
         if #gottenObject <= 0 then return false end
