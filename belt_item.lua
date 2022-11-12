@@ -43,6 +43,7 @@ local vecFloor             = vector.floor
 local vecRound             = vector.round
 local vecDirection         = vector.direction
 local vecCopy              = vector.copy
+local vecEquals            = vector.equals
 local vecLerp              = vector.lerp
 local serialize            = minetest.serialize
 local deserialize          = minetest.deserialize
@@ -163,6 +164,10 @@ function beltItem:movement(object, delta)
 
     -- Initial scan the belt is is on
     if not beltSwitch:match(getNode(self.integerPosition).name) then
+        if vecEquals(self.integerPosition, vecZero()) then
+            local position = object:get_pos()
+            write("A item has glitched out at ", position.x, ", ", position.y, ", ", position.z)
+        end
         addItem(self.integerPosition, self.itemString)
         object:remove()
         return false
