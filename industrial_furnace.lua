@@ -23,6 +23,8 @@ local registerNode         = minetest.register_node
 local getNode              = minetest.get_node
 local getMeta              = minetest.get_meta
 local setNode              = minetest.set_node
+local swapNode             = minetest.swap_node
+local getTimer             = minetest.get_node_timer
 local onLoaded             = minetest.register_on_mods_loaded
 local addEntity            = minetest.add_entity
 local addItem              = minetest.add_item
@@ -31,6 +33,7 @@ local registerCraftItem    = minetest.register_craftitem
 local registeredNodes      = minetest.registered_nodes
 local registeredItems      = minetest.registered_items --? Why are these two different?
 local registeredCraftItems = minetest.registered_craftitems
+local getCraftResult       = minetest.get_craft_result
 local newVec               = vector.new
 local vecZero              = vector.zero
 local vecMultiply          = vector.multiply
@@ -125,6 +128,7 @@ function topDefinition:on_place(placer, pointedThing)
     local invBottom = metaBottom:get_inventory()
     invBottom:set_size("fuel", 1)
     metaBottom:set_string("formspec", bottomFormSpec)
+    getTimer(bottom):start(0)
 
     self:take_item(1)
     return self
@@ -160,6 +164,49 @@ local bottomDefinition = {
         dig_immediate = 3
     },
 }
+
+
+local function takeFuel(stack, inv)
+    stack:take_item(1)
+    inv:set_stack("fuel", 1, stack)
+end
+
+local function checkFuel(stack, inv)
+    local fuelTime = getCraftResult({method="fuel", width=1, items={stack}}).time
+    if fuelTime == 0 then return false end
+    takeFuel(stack, inv)
+    return fuelTime
+end
+
+function bottomDefinition:on_timer()
+
+    -- Try not to trash the game with 5 second intervals
+    local refreshTime = 5
+    local node = getNode(self)
+    local meta = getMeta(self)
+    local inv  = meta:get_inventory()
+    local stack = inv:get_stack("fuel", 1)
+    local fuelTime = checkFuel(stack, inv)
+
+    --* Furnace burner is at max level and has fuel
+    if level == 3 and fuelTime then
+        refreshTime = 10 * tier
+    --* Furnace burner is reaching higher level with fuel
+    elseif level < 3 and fuelTime then
+        refreshTime = 10 / tier
+        node.name = buildString("tech:industrial_furnace_bottom_", tier, "_", level + 1)
+        swapNode(self, node)
+    --* Furnace burner has no fuel and starts to level down
+    elseif level > 0 and not fuelTime then
+        refreshTime = 10 / tier
+        node.name = buildString("tech:industrial_furnace_bottom_", tier, "_", level - 1)
+        swapNode(self, node)
+    end
+
+
+    getTimer(self):start(refreshTime)
+end
+
 
 registerNode(
     buildString("tech:industrial_furnace_bottom_", tier, "_", level),
