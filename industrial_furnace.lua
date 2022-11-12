@@ -146,15 +146,31 @@ end
 
 function topDefinition:on_timer()
     -- Try not to trash the game with 5 second intervals
-    local refreshTime = 5
+    local refreshTime = 0.25
     if not checkBurner(self) then getTimer(self):start(refreshTime) return end
 
     local node = getNode(self)
     local meta = getMeta(self)
     local inv  = meta:get_inventory()
-    local list = inv:get_list("source")
-    minetest.get_craft_result({method = "cooking", width = 1, items = list})
+    local sourceStack = inv:get_stack("stock", 1)
 
+    if not sourceStack then getTimer(self):start(refreshTime) return end
+
+    local cooked, afterCooked = getCraftResult({method = "cooking", width = 1, items = {sourceStack}})
+    local cookable = cooked.time ~= 0
+    if not cookable then getTimer(self):start(refreshTime) return end
+    
+    afterCooked = afterCooked.items[1]
+    cooked      = cooked.item
+
+    if inv:room_for_item("output", cooked) then
+        inv:set_stack("stock", 1, afterCooked)
+        inv:add_item("output", cooked)
+        refreshTime = 1.5 / tier
+        playSound("tech_industrial_furnace_cook", {pos=self, gain = 0.25})
+    end
+
+    getTimer(self):start(refreshTime)
 end
 
 registerNode(
