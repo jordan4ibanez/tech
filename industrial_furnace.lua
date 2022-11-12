@@ -24,6 +24,7 @@ local getNode              = minetest.get_node
 local getMeta              = minetest.get_meta
 local setNode              = minetest.set_node
 local swapNode             = minetest.swap_node
+local removeNode           = minetest.remove_node
 local getTimer             = minetest.get_node_timer
 local onLoaded             = minetest.register_on_mods_loaded
 local addEntity            = minetest.add_entity
@@ -34,6 +35,8 @@ local registeredNodes      = minetest.registered_nodes
 local registeredItems      = minetest.registered_items --? Why are these two different?
 local registeredCraftItems = minetest.registered_craftitems
 local getCraftResult       = minetest.get_craft_result
+local digNode              = minetest.dig_node
+local nodeDig              = minetest.node_dig
 local newVec               = vector.new
 local vecZero              = vector.zero
 local vecMultiply          = vector.multiply
@@ -41,7 +44,7 @@ local vecAdd               = vector.add
 local vecSubtract          = vector.subtract
 local vecRound             = vector.round
 local vecDirection         = vector.direction
-local vecCopy             = vector.copy
+local vecCopy              = vector.copy
 local serialize            = minetest.serialize
 local deserialize          = minetest.deserialize
 local objectsInRadius      = minetest.get_objects_inside_radius
@@ -146,10 +149,9 @@ end
 
 function topDefinition:on_timer()
     -- Try not to trash the game with 5 second intervals
-    local refreshTime = 0.25
+    local refreshTime = 5
     if not checkBurner(self) then getTimer(self):start(refreshTime) return end
 
-    local node = getNode(self)
     local meta = getMeta(self)
     local inv  = meta:get_inventory()
     local sourceStack = inv:get_stack("stock", 1)
@@ -166,11 +168,34 @@ function topDefinition:on_timer()
     if inv:room_for_item("output", cooked) then
         inv:set_stack("stock", 1, afterCooked)
         inv:add_item("output", cooked)
-        refreshTime = 1.5 / tier
+        refreshTime = 1.75 / tier
         playSound("tech_industrial_furnace_cook", {pos=self, gain = 0.25})
     end
 
     getTimer(self):start(refreshTime)
+end
+
+function topDefinition:on_dig(node, digger)
+    local meta = getMeta(self)
+    local inv  = meta:get_inventory()
+
+    local stock = inv:get_list("stock")
+    if stock then for _,item in ipairs(stock) do
+        addItem(self, item)
+    end end
+
+    local output = inv:get_list("output")
+    if output then for _,item in ipairs(output) do
+        addItem(self, item)
+    end end
+
+    nodeDig(self, node, digger)
+    return true
+end
+
+function topDefinition:after_dig_node()
+    self.y = self.y - 1
+    digNode(self)
 end
 
 registerNode(
@@ -179,8 +204,15 @@ registerNode(
 )
 
 
+addInserterContainer("input", topNodeNameString, "output")
+addInserterContainer("output", topNodeNameString, "stock")
+
 -- Bottom furnace is the heat control, must be leveled
 for level = 0,3 do
+
+local bottomNodeNameString = buildString("tech:industrial_furnace_bottom_", tier, "_", level)
+
+addInserterContainer("output", bottomNodeNameString, "fuel")
 
 local sideBottomTextureString = buildString(
     "industrial_furnace_bottom_", tier, ".png",
@@ -202,6 +234,7 @@ local bottomDefinition = {
     groups = {
         dig_immediate = 3
     },
+    drop = topNodeNameString
 }
 
 local function takeFuel(stack, inv)
@@ -231,12 +264,12 @@ function bottomDefinition:on_timer()
         refreshTime = 10 * tier
     --* Furnace burner is reaching higher level with fuel
     elseif level < 3 and fuelTime then
-        refreshTime = 0.1--10 / tier
+        refreshTime = 10 / tier
         node.name = buildString("tech:industrial_furnace_bottom_", tier, "_", level + 1)
         swapNode(self, node)
     --* Furnace burner has no fuel and starts to level down
     elseif level > 0 and not fuelTime then
-        refreshTime = 0.1--10 / tier
+        refreshTime = 10 / tier
         node.name = buildString("tech:industrial_furnace_bottom_", tier, "_", level - 1)
         swapNode(self, node)
     end
@@ -244,9 +277,26 @@ function bottomDefinition:on_timer()
     getTimer(self):start(refreshTime)
 end
 
+function bottomDefinition:on_dig(node, digger)
+    local meta = getMeta(self)
+    local inv  = meta:get_inventory()
+
+    local fuel = inv:get_list("fuel")
+    if fuel then for _,item in ipairs(fuel) do
+        addItem(self, item)
+    end end
+
+    nodeDig(self, node, digger)
+    return true
+end
+
+function bottomDefinition:after_dig_node()
+    self.y = self.y + 1
+    digNode(self)
+end
 
 registerNode(
-    buildString("tech:industrial_furnace_bottom_", tier, "_", level),
+    bottomNodeNameString,
     bottomDefinition
 )
 
