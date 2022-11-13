@@ -374,8 +374,11 @@ local function addDrill(position, vectorDirection, meta, new)
     end
     newPosition.y = newPosition.y - 1
     if drill then
-        drill:get_luaentity():sendTo(newPosition)
-        drill:get_luaentity():setBaseYPosition(position.y + (WIDTH * 2))
+        local drillLuaEntity = drill:get_luaentity()
+        if drillLuaEntity then
+            drillLuaEntity:sendTo(newPosition)
+            drillLuaEntity:setBaseYPosition(position.y + (WIDTH * 2))
+        end
     end
     
     if new then
