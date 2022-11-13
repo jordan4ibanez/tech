@@ -697,7 +697,12 @@ function quarry:on_timer()
             )
             -- debugParticle(checkPosition)
             checkPosition = vecAdd(checkPosition, currentDirection)
-            return getNode(checkPosition).name ~= frameString
+
+            local goodToGo = getNode(checkPosition).name ~= frameString
+            if goodToGo then
+                playSound("tech_quarry_move", {pos = checkPosition})
+            end
+            return goodToGo
         end
 
         local function move()
