@@ -633,9 +633,8 @@ end
 
 local function checkForIron(inv)
     local gottenItem = inv:remove_item("main", ItemStack("default:steel_ingot")):get_name()
+    if gottenItem == "" then return false end
     return true
-    --if gottenItem == "" then return false end
-    --return true
 end
 
 function quarry:on_timer()
