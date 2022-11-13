@@ -66,13 +66,63 @@ local quarryFormspec = buildString(
 
 for tier = 1,3 do
 
+local HALF_PI = math.pi / 2
+local WIDTH   = 8
 local frameString = buildString("tech:quarry_frame_", tier)
+local frameTextureString = buildString("tech_quarry_frame_", tier, ".png")
+
+local frameEntityTextureString = buildString("[combine:", (((WIDTH * 2) - 1) * 16), "x16")
+for i = 0, (WIDTH * 2) - 2 do
+    frameEntityTextureString = buildString(frameEntityTextureString, ":", i * 16, ",0=", frameTextureString)
+end
+local frameEntityTextureStringR90 = buildString(frameEntityTextureString, "^[transformR90")
+
+
+local frameEntity = {
+    visual = "cube",
+    visual_size = {
+        x = 1,
+        y = 1,
+        z = (WIDTH * 2) - 1
+    },
+    textures = {
+        frameEntityTextureStringR90,
+        frameEntityTextureStringR90,
+        frameEntityTextureString,
+        frameEntityTextureString,
+        frameTextureString,
+        frameTextureString
+    },
+    axis = 0
+}
+
+function frameEntity:setAxis(newAxis)
+    self.axis = newAxis
+end
+
+-- Axis X is 0, Z is 1
+function frameEntity:sendTo(newPosition)
+    local position = self.object:get_pos()
+
+    if self.axis == 0 then
+        position.x = newPosition.x
+    else
+        position.z = newPosition.z
+    end
+    self.object:move_to(position)
+end
+
+registerEntity(
+    frameString,
+    frameEntity
+)
+
 registerNode(
     frameString,
     {
         paramtype  = "light",
         drawtype   = "normal",
-        tiles      = {buildString("tech_quarry_frame_", tier, ".png")}
+        tiles      = {frameTextureString}
     }
 )
 
@@ -118,13 +168,65 @@ function quarry:after_place_node(placer, _, pointedThing)
     meta:set_string("formspec", quarryFormspec)
 
     -- Start this thing up
-    meta:set_int("setUpStep", 1)
+    meta:set_int("setUpStep", 12)
     meta:set_int("distance", 1)
     getTimer(position):start(0)
 end
 
-local HALF_PI = math.pi / 2
-local WIDTH   = 8
+local function addDrill(position, vectorDirection)
+    local newPosition = vecCopy(position)
+
+    local yaw = dirToYaw(vectorDirection)
+    local newOffset = vecCopy(vectorDirection)
+
+    newOffset = vecMultiply(newOffset, -WIDTH)
+    newOffset.y = newOffset.y + (WIDTH * 2)
+    newPosition = vecAdd(newPosition, newOffset)
+
+    local adjacentFrame = addEntity(newPosition, frameString)
+    local oppositeFrame = addEntity(newPosition, frameString)
+
+    --! Check if the entity exists
+    if adjacentFrame then
+        adjacentFrame:set_yaw(yaw)
+        local luaEntity = adjacentFrame:get_luaentity()
+        if vectorDirection.x ~= 0 then
+            luaEntity:setAxis(1)
+        else
+            luaEntity:setAxis(0)
+        end
+    end
+
+    yaw = yaw - HALF_PI
+
+    --! Check if the entity exists
+    if oppositeFrame then
+        oppositeFrame:set_yaw(yaw)
+        local luaEntity = oppositeFrame:get_luaentity()
+        if vectorDirection.x ~= 0 then
+            luaEntity:setAxis(0)
+        else
+            luaEntity:setAxis(1)
+        end
+    end
+
+    newPosition = vecCopy(position)
+    newOffset = vecCopy(vectorDirection)
+    
+    local leftOffset = yawToDir(yaw)
+
+    leftOffset = vecMultiply(leftOffset, (WIDTH) - 1)
+    newOffset = vecMultiply(newOffset, (-WIDTH * 2) + 1)
+    newPosition = vecAdd(newPosition, newOffset)
+    newPosition.y = newPosition.y + (WIDTH * 2)
+    newPosition = vecAdd(newPosition, leftOffset)
+
+    --! This should probably check if the entity exists
+    if adjacentFrame and oppositeFrame then
+        adjacentFrame:get_luaentity():sendTo(newPosition)
+        oppositeFrame:get_luaentity():sendTo(newPosition)
+    end
+end
 
 --! This will clobber anything in it's path, so be careful
 local function setUp(position, meta, step, vectorDirection)
@@ -146,8 +248,6 @@ local function setUp(position, meta, step, vectorDirection)
     local distance = meta:get_int("distance")
 
     --! Turn this mess into a switch
-    -- debugParticle(endPoint)
-
     -- Building right side next to main node
     if step == 1 then
         -- Move it right
@@ -370,10 +470,18 @@ local function setUp(position, meta, step, vectorDirection)
             setDistance(0)
             setStep(0)
             playSound("tech_inserter_startup", {pos = position})
+            addDrill(position, vectorDirection)
         end
     end
 end
 
+local function checkForIron(inv)
+    local gottenItem = inv:remove_item("main", ItemStack("default:steel_ingot")):get_name()
+    return true
+    --if gottenItem == "" then return false end
+    --return true
+
+end
 
 function quarry:on_timer()
     -- Try not to trash the game with 5 second intervals
@@ -385,9 +493,13 @@ function quarry:on_timer()
     local timer     = getTimer(self)
     local vectorDirection = fourDirToDir(extractDirection(getNode(self)))
 
-    if setUpStep > 0 then
+    -- Building self
+    if setUpStep > 0 and checkForIron(inv) then
         setUp(self, meta, setUpStep, vectorDirection)
-        refreshTime = 0.25 -- 1 / tier
+        refreshTime = 0.25 / tier
+    -- Mining
+    else
+        
     end
 
     timer:start(refreshTime)
