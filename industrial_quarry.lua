@@ -317,15 +317,16 @@ local function addDrill(position, vectorDirection, meta, new)
 
     local adjacentFrame = addEntity(newPosition, frameString, "new")
     local oppositeFrame = addEntity(newPosition, frameString, "new")
-
-    --! Check if the entity exists
+    
     if adjacentFrame then
         adjacentFrame:set_yaw(yaw)
         local luaEntity = adjacentFrame:get_luaentity()
-        if vectorDirection.x ~= 0 then
-            luaEntity:setAxis(1)
-        else
-            luaEntity:setAxis(0)
+        if luaEntity then
+            if vectorDirection.x ~= 0 then
+                luaEntity:setAxis(1)
+            else
+                luaEntity:setAxis(0)
+            end
         end
     end
 
