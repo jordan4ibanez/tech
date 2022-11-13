@@ -37,6 +37,8 @@ local registeredCraftItems = minetest.registered_craftitems
 local getCraftResult       = minetest.get_craft_result
 local digNode              = minetest.dig_node
 local nodeDig              = minetest.node_dig
+local dirToYaw             = minetest.dir_to_yaw
+local yawToDir             = minetest.yaw_to_dir
 local newVec               = vector.new
 local vecZero              = vector.zero
 local vecMultiply          = vector.multiply
@@ -98,13 +100,296 @@ function quarry:after_place_node(placer, _, pointedThing)
     setNode(position, {name = quarryNodeString, param2 = fourDir})
 
     -- Create inventories
-    local metaTop = getMeta(position)
-    local invTop = metaTop:get_inventory()
-    invTop:set_size("main", 8*4)
-    metaTop:set_string("formspec", quarryFormspec)
+    local meta = getMeta(position)
+    local inv = meta:get_inventory()
+    inv:set_size("main", 8*4)
+    meta:set_string("formspec", quarryFormspec)
 
     -- Start this thing up
+    meta:set_int("setUpStep", 1)
+    meta:set_int("distance", 1)
     getTimer(position):start(0)
+end
+
+local HALF_PI = math.pi / 2
+local WIDTH   = 8
+
+--! This will clobber anything in it's path, so be careful
+local function setUp(position, meta, step, vectorDirection)
+
+    local yaw = dirToYaw(vectorDirection)
+
+    local function setDistance(newDistance)
+        meta:set_int("distance", newDistance)
+    end
+    local function setStep(newStep)
+        meta:set_int("setUpStep", newStep)
+    end
+    local function buildFrame(newPosition)
+        --! Make this the frame node
+        digNode(newPosition)
+        setNode(newPosition, {name = "default:glass"})
+    end
+    local function inverseSignum(input)
+        if input > 0 then return -1 end
+        return 1
+    end
+    local function signum(input)
+        if input > 0 then return 1 end
+        return -1
+    end
+
+    local maxNum
+    if vectorDirection.x ~= 0 then
+        maxNum = vectorDirection.x
+    else
+        maxNum = vectorDirection.z
+    end
+    local distance = meta:get_int("distance")
+
+    --! Turn this mess into a switch
+    -- debugParticle(endPoint)
+
+    -- Building right side next to main node
+    if step == 1 then
+        local localYaw = yaw + HALF_PI
+        local localDir = yawToDir(localYaw)
+        local currentPoint = vecAdd(vecMultiply(localDir, distance), position)
+        buildFrame(currentPoint)
+        if distance < WIDTH then
+            setDistance(distance + 1)
+        else
+            setDistance(1)
+            setStep(step + 1)
+        end
+    -- Building left side next to main node
+    elseif step == 2 then
+        local localYaw = yaw - HALF_PI
+        local localDir = yawToDir(localYaw)
+        local currentPoint = vecAdd(vecMultiply(localDir, distance), position)
+        buildFrame(currentPoint)
+        if distance < WIDTH then
+            setDistance(distance + 1)
+        else
+            setDistance(1)
+            setStep(step + 1)
+        end
+    -- Building the right side forward
+    elseif step == 3 then
+        local localYaw = yaw + HALF_PI
+        local localDir = yawToDir(localYaw)
+        -- Move it right
+        local currentPoint = vecAdd(vecMultiply(localDir, 8), position)
+        -- Move it forward
+        currentPoint = vecAdd(currentPoint, vecMultiply(vectorDirection, -distance))
+        buildFrame(currentPoint)
+        if distance < WIDTH * 2 then
+            setDistance(distance + 1)
+        else
+            setDistance(1)
+            setStep(step + 1)
+        end
+    -- Building the left side forward
+    elseif step == 4 then
+        local localYaw = yaw - HALF_PI
+        local localDir = yawToDir(localYaw)
+        -- Move it left
+        local currentPoint = vecAdd(vecMultiply(localDir, 8), position)
+        -- Move it forward
+        currentPoint = vecAdd(currentPoint, vecMultiply(vectorDirection, -distance))
+        buildFrame(currentPoint)
+        if distance < WIDTH * 2 then
+            setDistance(distance + 1)
+        else
+            setDistance(1)
+            setStep(step + 1)
+        end
+
+    -- Building the back bottom
+    elseif step == 5 then
+        local localYaw = yaw + HALF_PI
+        local localDir = yawToDir(localYaw)
+        -- Move it right
+        local currentPoint = vecAdd(vecMultiply(localDir, 8), position)
+        -- Move it forward
+        currentPoint = vecAdd(currentPoint, vecMultiply(vectorDirection, (-WIDTH * 2)))
+        -- Move it left
+        localYaw = yaw - HALF_PI
+        localDir = yawToDir(localYaw)
+        currentPoint = vecAdd(vecMultiply(localDir, distance), currentPoint)
+
+        buildFrame(currentPoint)
+
+        if distance < (WIDTH * 2) - 1 then
+            setDistance(distance + 1)
+        else
+            setDistance(1)
+            setStep(step + 1)
+        end
+
+    -- Building right support
+    elseif step == 6 then
+        local localYaw = yaw + HALF_PI
+        local localDir = yawToDir(localYaw)
+        -- Move it right
+        local currentPoint = vecAdd(vecMultiply(localDir, 8), position)
+        -- Move it up
+        currentPoint = vecAdd(newVec(0,distance,0), currentPoint)
+
+        buildFrame(currentPoint)
+
+        if distance < WIDTH * 2 then
+            setDistance(distance + 1)
+        else
+            setDistance(1)
+            setStep(step + 1)
+        end
+    -- Building the left support
+    elseif step == 7 then
+        local localYaw = yaw - HALF_PI
+        local localDir = yawToDir(localYaw)
+        -- Move it right
+        local currentPoint = vecAdd(vecMultiply(localDir, 8), position)
+        -- Move it up
+        currentPoint = vecAdd(newVec(0,distance,0), currentPoint)
+
+        buildFrame(currentPoint)
+
+        if distance < WIDTH * 2 then
+            setDistance(distance + 1)
+        else
+            setDistance(1)
+            setStep(step + 1)
+        end
+    -- Building back right support
+    elseif step == 8 then
+        local localYaw = yaw + HALF_PI
+        local localDir = yawToDir(localYaw)
+        -- Move it right
+        local currentPoint = vecAdd(vecMultiply(localDir, 8), position)
+        -- Move it forward
+        currentPoint = vecAdd(currentPoint, vecMultiply(vectorDirection, (-WIDTH * 2)))
+        -- Move it up
+        currentPoint = vecAdd(newVec(0,distance,0), currentPoint)
+
+        buildFrame(currentPoint)
+
+        if distance < WIDTH * 2 then
+            setDistance(distance + 1)
+        else
+            setDistance(1)
+            setStep(step + 1)
+        end
+    -- Building the back left support
+    elseif step == 9 then
+        local localYaw = yaw - HALF_PI
+        local localDir = yawToDir(localYaw)
+        -- Move it right
+        local currentPoint = vecAdd(vecMultiply(localDir, 8), position)
+        -- Move it forward
+        currentPoint = vecAdd(currentPoint, vecMultiply(vectorDirection, (-WIDTH * 2)))
+        -- Move it up
+        currentPoint = vecAdd(newVec(0,distance,0), currentPoint)
+
+        buildFrame(currentPoint)
+
+        if distance < WIDTH * 2 then
+            setDistance(distance + 1)
+        else
+            setDistance(1)
+            setStep(step + 1)
+        end
+    -- Building the top front
+    elseif step == 10 then
+        local localYaw = yaw + HALF_PI
+        local localDir = yawToDir(localYaw)
+        -- Move it right
+        local currentPoint = vecAdd(vecMultiply(localDir, 8), vecAdd(position, newVec(0,WIDTH * 2, 0)))
+        -- Move it left
+        localYaw = yaw - HALF_PI
+        localDir = yawToDir(localYaw)
+        currentPoint = vecAdd(vecMultiply(localDir, distance), currentPoint)
+
+        buildFrame(currentPoint)
+
+        if distance < (WIDTH * 2) - 1 then
+            setDistance(distance + 1)
+        else
+            setDistance(1)
+            setStep(step + 1)
+        end
+
+    -- Building the top right
+    elseif step == 11 then
+        local localYaw = yaw + HALF_PI
+        local localDir = yawToDir(localYaw)
+        -- Move it right
+        local currentPoint = vecAdd(vecMultiply(localDir, 8), vecAdd(position, newVec(0,WIDTH * 2, 0)))
+        -- Move it forward
+        currentPoint = vecAdd(currentPoint, vecMultiply(vectorDirection, -distance))
+        buildFrame(currentPoint)
+        if distance < (WIDTH * 2) - 1 then
+            setDistance(distance + 1)
+        else
+            setDistance(1)
+            setStep(step + 1)
+        end
+    -- Building the top left
+    elseif step == 12 then
+        local localYaw = yaw - HALF_PI
+        local localDir = yawToDir(localYaw)
+        -- Move it right
+        local currentPoint = vecAdd(vecMultiply(localDir, 8), vecAdd(position, newVec(0,WIDTH * 2, 0)))
+        -- Move it forward
+        currentPoint = vecAdd(currentPoint, vecMultiply(vectorDirection, -distance))
+        buildFrame(currentPoint)
+        if distance < (WIDTH * 2) - 1 then
+            setDistance(distance + 1)
+        else
+            setDistance(1)
+            setStep(step + 1)
+        end
+    -- Building the top back
+    elseif step == 13 then
+        local localYaw = yaw + HALF_PI
+        local localDir = yawToDir(localYaw)
+        -- Move it right
+        local currentPoint = vecAdd(vecMultiply(localDir, 8), vecAdd(position, newVec(0,WIDTH * 2, 0)))
+        -- Move it forward
+        currentPoint = vecAdd(currentPoint, vecMultiply(vectorDirection, (-WIDTH * 2)))
+        -- Move it left
+        localYaw = yaw - HALF_PI
+        localDir = yawToDir(localYaw)
+        currentPoint = vecAdd(vecMultiply(localDir, distance), currentPoint)
+
+        buildFrame(currentPoint)
+
+        if distance < (WIDTH * 2) - 1 then
+            setDistance(distance + 1)
+        else
+            setDistance(1)
+            setStep(step + 1)
+        end
+    end
+end
+
+
+function quarry:on_timer()
+    -- Try not to trash the game with 5 second intervals
+    local refreshTime = 5
+
+    local meta      = getMeta(self)
+    local inv       = meta:get_inventory()
+    local setUpStep = meta:get_int("setUpStep")
+    local timer     = getTimer(self)
+    local vectorDirection = fourDirToDir(extractDirection(getNode(self)))
+
+    if setUpStep > 0 then
+        setUp(self, meta, setUpStep, vectorDirection)
+        refreshTime = 0.25 -- 1 / tier
+    end
+
+    timer:start(0)
 end
 
 registerNode(
