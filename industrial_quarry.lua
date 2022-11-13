@@ -303,7 +303,7 @@ local function linearScanDown(position, vectorDirection)
     return scanDown()
 end
 
-local function addDrill(position, vectorDirection, meta)
+local function addDrill(position, vectorDirection, meta, new)
     local newPosition = vecCopy(position)
 
     local yaw = dirToYaw(vectorDirection)
@@ -378,8 +378,10 @@ local function addDrill(position, vectorDirection, meta)
     })
 
     -- The calculation is already complete here, drop the variable in storage
-    meta:set_string("currentPosition", serialize(newPosition))
-    meta:set_string("currentDirection", serialize(yawToDir(yaw + math.pi)))
+    if new then
+        meta:set_string("currentPosition", serialize(newPosition))
+        meta:set_string("currentDirection", serialize(yawToDir(yaw + math.pi)))
+    end
 end
 
 --! This will clobber anything in it's path, so be careful
@@ -624,7 +626,7 @@ local function setUp(position, meta, step, vectorDirection)
             setDistance(0)
             setStep(0)
             playSound("tech_inserter_startup", {pos = position})
-            addDrill(position, vectorDirection, meta)
+            addDrill(position, vectorDirection, meta, true)
         end
     end
 end
@@ -634,7 +636,6 @@ local function checkForIron(inv)
     return true
     --if gottenItem == "" then return false end
     --return true
-
 end
 
 function quarry:on_timer()
@@ -701,18 +702,35 @@ function quarry:on_timer()
         end
 
         local function move()
-            digNode(currentPosition)
+
+            local drops = getNodeDrops(getNode(currentPosition))
+            -- This can either cause a loss of items, OR, I could make it create an infinite item glitch
+            -- I prefer the former
+            removeNode(currentPosition)
+            
+            for _,stack in ipairs(drops) do
+                if inv:room_for_item("main", stack) then
+                    inv:add_item("main", stack)
+                else
+                    return false
+                end
+            end
+            
             currentPosition = vecAdd(currentPosition, currentDirection)
             setNewPosition(currentPosition)
             debugParticle(currentPosition)
             adjacentFrame:sendTo(currentPosition)
             oppositeFrame:sendTo(currentPosition)
             drill:sendTo(currentPosition)
+            return true
         end
         
         -- Going straight across
         if checkHeadWay() then
-            move()
+            if not move() then
+                timer:start(refreshTime)
+                return
+            end
         -- Turning trigger
         else
             if forward == 1 then
@@ -731,16 +749,22 @@ function quarry:on_timer()
 
             -- Starts moving the other direction
             if not checkHeadWay() then
-                digNode(currentPosition)
+                -- digNode(currentPosition)
                 failure = true
                 setForward(ternary(forward == 1, 0, 1))
             else
-                move()
+                if not move() then
+                    timer:start(refreshTime)
+                    return
+                end
             end
 
             if failure then
                 setNewDirection(newVec(0, -1, 0))
-                move()
+                if not move() then
+                    timer:start(refreshTime)
+                    return
+                end
             end
 
             -- Could probably cross plane this, but I feel like typing
