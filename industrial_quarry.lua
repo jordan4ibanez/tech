@@ -62,7 +62,54 @@ local quarryFormspec = buildString(
     "listring[current_player;main]"
 )
 
+local entityStorage = {}
 
+local function setEntityTable(position, table)
+    entityStorage[position] = table
+end
+local function getEntityTable(position)
+    if entityStorage[position] then
+        return entityStorage[position]
+    end
+    return nil
+end
+
+
+local drillEntity = {
+    visual = "cube",
+    visual_size = {
+        x = 0.25,
+        y = 1,
+        z = 0.25
+    },
+    textures = {
+        "tech_drill.png",
+        "tech_drill.png",
+        "tech_drill.png",
+        "tech_drill.png",
+        "tech_drill.png",
+        "tech_drill.png"
+    },
+    automatic_rotate = math.pi * 4,
+    baseYPosition = 0
+}
+function drillEntity:setBaseYPosition(yPosition)
+    self.baseYPosition = yPosition
+end
+function drillEntity:sendTo(position)
+    self.object:move_to(position)
+end
+
+function drillEntity:on_activate(staticData)
+    if not staticData == "new" then
+        self.object:remove()
+    end
+end
+
+registerEntity(
+    "tech:drill_entity",
+    drillEntity
+)
 
 for tier = 1,3 do
 
@@ -110,6 +157,12 @@ function frameEntity:sendTo(newPosition)
         position.z = newPosition.z
     end
     self.object:move_to(position)
+end
+
+function frameEntity:on_activate(staticData)
+    if not staticData == "new" then
+        self.object:remove()
+    end
 end
 
 registerEntity(
@@ -173,7 +226,7 @@ function quarry:after_place_node(placer, _, pointedThing)
     getTimer(position):start(0)
 end
 
-local function addDrill(position, vectorDirection)
+local function addDrill(position, vectorDirection, meta)
     local newPosition = vecCopy(position)
 
     local yaw = dirToYaw(vectorDirection)
@@ -183,8 +236,8 @@ local function addDrill(position, vectorDirection)
     newOffset.y = newOffset.y + (WIDTH * 2)
     newPosition = vecAdd(newPosition, newOffset)
 
-    local adjacentFrame = addEntity(newPosition, frameString)
-    local oppositeFrame = addEntity(newPosition, frameString)
+    local adjacentFrame = addEntity(newPosition, frameString, "new")
+    local oppositeFrame = addEntity(newPosition, frameString, "new")
 
     --! Check if the entity exists
     if adjacentFrame then
@@ -210,6 +263,12 @@ local function addDrill(position, vectorDirection)
         end
     end
 
+    newPosition.y = newPosition.y - 1
+    local drill = addEntity(newPosition, "tech:drill_entity", "new")
+
+    newPosition.y = newPosition.y + 1
+
+
     newPosition = vecCopy(position)
     newOffset = vecCopy(vectorDirection)
     
@@ -226,6 +285,21 @@ local function addDrill(position, vectorDirection)
         adjacentFrame:get_luaentity():sendTo(newPosition)
         oppositeFrame:get_luaentity():sendTo(newPosition)
     end
+    newPosition.y = newPosition.y - 1
+    if drill then
+        drill:get_luaentity():sendTo(newPosition)
+    end
+    
+
+    setEntityTable(position, {
+        adjacentFrame = adjacentFrame:get_luaentity(),
+        oppositeFrame = oppositeFrame:get_luaentity(),
+        drill         = drill:get_luaentity()
+    })
+
+    -- The calculation is already complete here, drop the variable in storage
+    meta:set_string("currentPosition", serialize(newPosition))
+    meta:set_string("currentDirection", serialize(yawToDir(yaw + math.pi)))
 end
 
 --! This will clobber anything in it's path, so be careful
@@ -470,7 +544,7 @@ local function setUp(position, meta, step, vectorDirection)
             setDistance(0)
             setStep(0)
             playSound("tech_inserter_startup", {pos = position})
-            addDrill(position, vectorDirection)
+            addDrill(position, vectorDirection, meta)
         end
     end
 end
@@ -499,6 +573,15 @@ function quarry:on_timer()
         refreshTime = 0.25 / tier
     -- Mining
     else
+        local entities = getEntityTable(self)
+        if not entities then
+            addDrill(self, vectorDirection, meta)
+            entities = getEntityTable(self)
+        end
+        local adjacentFrame = entities.adjacentFrame
+        local oppositeFrame = entities.oppositeFrame
+        
+
         
     end
 
