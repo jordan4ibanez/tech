@@ -62,6 +62,8 @@ local quarryFormspec = buildString(
     "listring[current_player;main]"
 )
 
+
+
 for tier = 1,3 do
 
 local quarryNodeString = buildString("tech:quarry_", tier)
@@ -129,22 +131,9 @@ local function setUp(position, meta, step, vectorDirection)
         --! Make this the frame node
         digNode(newPosition)
         setNode(newPosition, {name = "default:glass"})
-    end
-    local function inverseSignum(input)
-        if input > 0 then return -1 end
-        return 1
-    end
-    local function signum(input)
-        if input > 0 then return 1 end
-        return -1
+        playSound("tech_quarry_build", {pos = newPosition})
     end
 
-    local maxNum
-    if vectorDirection.x ~= 0 then
-        maxNum = vectorDirection.x
-    else
-        maxNum = vectorDirection.z
-    end
     local distance = meta:get_int("distance")
 
     --! Turn this mess into a switch
@@ -369,8 +358,8 @@ local function setUp(position, meta, step, vectorDirection)
         if distance < (WIDTH * 2) - 1 then
             setDistance(distance + 1)
         else
-            setDistance(1)
-            setStep(step + 1)
+            setDistance(0)
+            setStep(0)
         end
     end
 end
