@@ -66,6 +66,16 @@ local quarryFormspec = buildString(
 
 for tier = 1,3 do
 
+local frameString = buildString("tech:quarry_frame_", tier)
+registerNode(
+    frameString,
+    {
+        paramtype  = "light",
+        drawtype   = "normal",
+        tiles      = {buildString("tech_quarry_frame_", tier, ".png")}
+    }
+)
+
 local quarryNodeString = buildString("tech:quarry_", tier)
 
 local sideQuarryTexture = buildString("tech_quarry_front_", tier, ".png")
@@ -128,9 +138,8 @@ local function setUp(position, meta, step, vectorDirection)
         meta:set_int("setUpStep", newStep)
     end
     local function buildFrame(newPosition)
-        --! Make this the frame node
         digNode(newPosition)
-        setNode(newPosition, {name = "default:glass"})
+        setNode(newPosition, {name = frameString})
         playSound("tech_quarry_build", {pos = newPosition})
     end
 
@@ -360,6 +369,7 @@ local function setUp(position, meta, step, vectorDirection)
         else
             setDistance(0)
             setStep(0)
+            playSound("tech_inserter_startup", {pos = position})
         end
     end
 end
@@ -380,7 +390,7 @@ function quarry:on_timer()
         refreshTime = 0.25 -- 1 / tier
     end
 
-    timer:start(0)
+    timer:start(refreshTime)
 end
 
 registerNode(
