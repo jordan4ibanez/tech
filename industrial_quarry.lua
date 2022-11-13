@@ -650,12 +650,13 @@ function quarry:on_timer()
     local vectorDirection = fourDirToDir(extractDirection(getNode(self)))
 
     -- Building self
-    if setUpStep > 0 and checkForIron(inv) then
-        setUp(self, meta, setUpStep, vectorDirection)
-        refreshTime = 0.25 / tier
+    if setUpStep > 0 then
+        if checkForIron(inv) then
+            setUp(self, meta, setUpStep, vectorDirection)
+            refreshTime = 0.25 / tier
+        end
     -- Mining
     else
-
         
         local currentPosition  = deserialize(meta:get_string("currentPosition"))
         local currentDirection = deserialize(meta:get_string("currentDirection"))
