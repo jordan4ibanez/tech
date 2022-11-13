@@ -65,11 +65,12 @@ local quarryFormspec = buildString(
 local entityStorage = {}
 
 local function setEntityTable(position, table)
-    entityStorage[position] = table
+    entityStorage[serialize(position)] = table
 end
 local function getEntityTable(position)
-    if entityStorage[position] then
-        return entityStorage[position]
+    local pos = serialize(position)
+    if entityStorage[pos] then
+        return entityStorage[pos]
     end
     return nil
 end
@@ -91,17 +92,30 @@ local drillEntity = {
         "tech_drill.png"
     },
     automatic_rotate = math.pi * 4,
-    baseYPosition = 0
+    baseYPosition = 0,
+    oldY = 0
 }
 function drillEntity:setBaseYPosition(yPosition)
     self.baseYPosition = yPosition
 end
 function drillEntity:sendTo(position)
-    self.object:move_to(position)
+    local pos = vecCopy(position)
+    pos.y = (pos.y + self.baseYPosition) / 2
+
+    if self.oldY ~= pos.y then
+        local height = (self.baseYPosition - pos.y) * 2
+        self.object:set_properties({visual_size = {
+            x = 0.25,
+            y = height,
+            z = 0.25
+        }})
+    end
+
+    self.object:move_to(pos)
 end
 
 function drillEntity:on_activate(staticData)
-    if not staticData == "new" then
+    if staticData == "" then
         self.object:remove()
     end
 end
@@ -150,6 +164,7 @@ end
 -- Axis X is 0, Z is 1
 function frameEntity:sendTo(newPosition)
     local position = self.object:get_pos()
+    if not position then return end
 
     if self.axis == 0 then
         position.x = newPosition.x
@@ -160,7 +175,7 @@ function frameEntity:sendTo(newPosition)
 end
 
 function frameEntity:on_activate(staticData)
-    if not staticData == "new" then
+    if staticData == "" then
         self.object:remove()
     end
 end
@@ -221,8 +236,10 @@ function quarry:after_place_node(placer, _, pointedThing)
     meta:set_string("formspec", quarryFormspec)
 
     -- Start this thing up
-    meta:set_int("setUpStep", 12)
+    meta:set_int("setUpStep", 1)
     meta:set_int("distance", 1)
+    meta:set_int("turning", 0)
+    meta:set_int("forward", 0)
     getTimer(position):start(0)
 end
 
@@ -288,6 +305,7 @@ local function addDrill(position, vectorDirection, meta)
     newPosition.y = newPosition.y - 1
     if drill then
         drill:get_luaentity():sendTo(newPosition)
+        drill:get_luaentity():setBaseYPosition(position.y + (WIDTH * 2))
     end
     
 
@@ -573,16 +591,115 @@ function quarry:on_timer()
         refreshTime = 0.25 / tier
     -- Mining
     else
+
+        
+        local currentPosition  = deserialize(meta:get_string("currentPosition"))
+        local currentDirection = deserialize(meta:get_string("currentDirection"))
+        local turning          = meta:get_int("turning")
+        local forward          = meta:get_int("forward")
+
+
+        local function setNewPosition(position)
+            meta:set_string("currentPosition",serialize(position))
+            currentPosition = position
+        end
+        local function setNewDirection(direction)
+            meta:set_string("currentDirection", serialize(direction))
+            currentDirection = direction
+        end
+        local function setTurning(newTurning)
+            meta:set_int("turning", newTurning)
+            turning = newTurning
+        end
+        local function setForward(newForward)
+            meta:set_int("forward", newForward)
+            forward = newForward
+        end
+
         local entities = getEntityTable(self)
-        if not entities then
+        -- Just force the game to add these entities
+        while not entities do
             addDrill(self, vectorDirection, meta)
             entities = getEntityTable(self)
         end
+
         local adjacentFrame = entities.adjacentFrame
         local oppositeFrame = entities.oppositeFrame
-        
+        local drill         = entities.drill
 
+        local function checkHeadWay()
+            local checkPosition = newVec(
+                currentPosition.x,
+                self.y + (WIDTH * 2),
+                currentPosition.z
+            )
+            debugParticle(checkPosition)
+            checkPosition = vecAdd(checkPosition, currentDirection)
+            return getNode(checkPosition).name ~= frameString
+        end
+
+        local function move()
+            digNode(currentPosition)
+            currentPosition = vecAdd(currentPosition, currentDirection)
+            setNewPosition(currentPosition)
+            debugParticle(currentPosition)
+            adjacentFrame:sendTo(currentPosition)
+            oppositeFrame:sendTo(currentPosition)
+            drill:sendTo(currentPosition)
+        end
         
+        -- Going straight across
+        
+            
+        if checkHeadWay() then
+            move()
+        else
+            if forward == 1 then
+                setNewDirection(vecMultiply(vectorDirection, -1))
+                setTurning(1)
+            else
+                setNewDirection(vectorDirection)
+                setTurning(1)
+            end
+        end
+
+        if turning == 1 then
+
+            local failure = false
+
+            -- Starts moving the other direction
+            if not checkHeadWay() then
+                failure = true
+                setForward(ternary(forward == 1, 0, 1))
+            else
+                move()
+            end
+
+            -- Could probably cross plane this, but I feel like typing
+            local origin
+            local destination
+            if vectorDirection.x ~= 0 then
+                origin = newVec(0,0,currentPosition.z)
+                destination = newVec(0,0,self.z)
+            else
+                origin = newVec(currentPosition.x,0,0)
+                destination = newVec(self.x,0,0)
+            end
+            
+            local newDirection = vecDirection(origin, destination)
+            setNewDirection(newDirection)
+            setTurning(0)
+
+            if failure then
+                newDirection.y = -1
+                setNewDirection(newDirection)
+                move()
+                newDirection.y = 0
+                setNewDirection(newDirection)
+            end
+        end
+
+        refreshTime = 0.01
     end
 
     timer:start(refreshTime)
