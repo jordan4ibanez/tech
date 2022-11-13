@@ -52,11 +52,11 @@ local isPlayer             = minetest.is_player
 local playSound            = minetest.sound_play
 
 local quarryFormspec = buildString(
-	"size[8,8.5]",
-    "list[context;fuel;2.75,0.5;1,1;]",
-    "list[current_player;main;0,4.25;8,1;]",
-    "list[current_player;main;0,5.5;8,3;8]",
-    "listring[context;fuel]",
+    "size[8,9]",
+    "list[context;main;0,0.3;8,4;]",
+    "list[current_player;main;0,4.85;8,1;]" ,
+    "list[current_player;main;0,6.08;8,3;8]" ,
+    "listring[context;main]" ,
     "listring[current_player;main]"
 )
 
@@ -88,11 +88,23 @@ local quarry = {
     },
 }
 
-function quarry:after_place_node (placer, _, pointedThing)
+function quarry:after_place_node(placer, _, pointedThing)
+    local position = pointedThing.above
+
+    -- Initial setup
     local lookDir = placer:get_look_dir()
     local fourDir = convertDir(dirToFourDir(lookDir))
     write(dirToFourDir(lookDir))
-    setNode(pointedThing.above, {name = quarryNodeString, param2 = fourDir})
+    setNode(position, {name = quarryNodeString, param2 = fourDir})
+
+    -- Create inventories
+    local metaTop = getMeta(position)
+    local invTop = metaTop:get_inventory()
+    invTop:set_size("main", 8*4)
+    metaTop:set_string("formspec", quarryFormspec)
+
+    -- Start this thing up
+    getTimer(position):start(0)
 end
 
 registerNode(
