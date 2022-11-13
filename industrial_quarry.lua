@@ -53,6 +53,7 @@ local deserialize          = minetest.deserialize
 local objectsInRadius      = minetest.get_objects_inside_radius
 local isPlayer             = minetest.is_player
 local playSound            = minetest.sound_play
+local addParticleSpawner   = minetest.add_particlespawner
 
 local quarryFormspec = buildString(
     "size[8,9]",
@@ -191,7 +192,8 @@ registerNode(
     {
         paramtype  = "light",
         drawtype   = "normal",
-        tiles      = {frameTextureString}
+        tiles      = {frameTextureString},
+        drop       = ""
     }
 )
 
@@ -710,8 +712,26 @@ function quarry:on_timer()
             local drops = getNodeDrops(getNode(currentPosition))
             -- This can either cause a loss of items, OR, I could make it create an infinite item glitch
             -- I prefer the former
+            local node = getNode(currentPosition)
             removeNode(currentPosition)
-            
+
+            addParticleSpawner({
+                time = 0.001,
+                amount = 10,
+                minpos = vecSubtract(currentPosition, newVec(0.5,0.5,0.5)),
+                maxpos = vecAdd(currentPosition, newVec(0.5,0.5,0.5)),
+                minvel = {x=-1, y=1, z=-1},
+                maxvel = {x=1, y=2, z=1},
+                minacc = {x=0, y=-9.81, z=0},
+                maxacc = {x=0, y=-9.81, z=0},
+                minsize = 0,
+                maxsize = 0,
+                collisiondetection = true,
+                node = node
+            })
+
+            playSound("tech_quarry_break", {pos = currentPosition})
+
             for _,stack in ipairs(drops) do
                 if inv:room_for_item("main", stack) then
                     inv:add_item("main", stack)
