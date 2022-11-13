@@ -387,9 +387,9 @@ local function addDrill(position, vectorDirection, meta, new)
     
 
     setEntityTable(position, {
-        adjacentFrame = adjacentFrame:get_luaentity(),
-        oppositeFrame = oppositeFrame:get_luaentity(),
-        drill         = drill:get_luaentity()
+        adjacentFrame = adjacentFrame,
+        oppositeFrame = oppositeFrame,
+        drill         = drill
     })
 
     -- The calculation is already complete here, drop the variable in storage
