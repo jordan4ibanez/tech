@@ -370,7 +370,9 @@ local function addDrill(position, vectorDirection, meta, new)
         drill:get_luaentity():setBaseYPosition(position.y + (WIDTH * 2))
     end
     
-    newPosition.y = linearScanDown(position, vectorDirection)
+    if new then
+        newPosition.y = linearScanDown(position, vectorDirection)
+    end
     
 
     setEntityTable(position, {
