@@ -9,7 +9,12 @@ local buildString          = customTools.buildString
 
 --! Automate loading
 local fileList = {
-    "belt", "inserter", "belt_item", "inserter_visual", "industrial_furnace"
+    "belt",
+    "inserter",
+    "belt_item",
+    "inserter_visual",
+    "industrial_furnace",
+    "industrial_quarry"
 }
 
 local function loadFromRoot(fileName)
