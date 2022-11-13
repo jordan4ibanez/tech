@@ -696,7 +696,7 @@ function quarry:on_timer()
                 self.y + (WIDTH * 2),
                 currentPosition.z
             )
-            debugParticle(checkPosition)
+            -- debugParticle(checkPosition)
             checkPosition = vecAdd(checkPosition, currentDirection)
             return getNode(checkPosition).name ~= frameString
         end
@@ -718,7 +718,7 @@ function quarry:on_timer()
             
             currentPosition = vecAdd(currentPosition, currentDirection)
             setNewPosition(currentPosition)
-            debugParticle(currentPosition)
+            -- debugParticle(currentPosition)
             adjacentFrame:sendTo(currentPosition)
             oppositeFrame:sendTo(currentPosition)
             drill:sendTo(currentPosition)
