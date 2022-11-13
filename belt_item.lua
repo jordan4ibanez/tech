@@ -206,7 +206,7 @@ function beltItem:movement(object, delta)
 
     local newPosition = vecLerp(self.originPosition, self.destinationPosition, self.movementProgress)
 
-    if not self:findRoom(newPosition, 0.25) then
+    if not self:findRoom(newPosition, 0.2) then
         self.movementProgress = oldProgress
         return
     end
@@ -453,7 +453,7 @@ function beltItem:updatePosition(pos, initialPlacement)
     local newPosition = vecLerp(storageOriginPosition, storageDestinationPosition, storageMovementProgress)
 
     
-    if not self:findRoom(newPosition, 0.25) and not initialPlacement then
+    if not self:findRoom(newPosition, 0.2) and not initialPlacement then
         return false
     end
 
