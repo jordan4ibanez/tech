@@ -361,10 +361,16 @@ local function addDrill(position, vectorDirection, meta, new)
     newPosition.y = newPosition.y + (WIDTH * 2)
     newPosition = vecAdd(newPosition, leftOffset)
 
-    --! This should probably check if the entity exists
+    --* This does this in this manor so a heap object can be reused :)
     if adjacentFrame and oppositeFrame then
-        adjacentFrame:get_luaentity():sendTo(newPosition)
-        oppositeFrame:get_luaentity():sendTo(newPosition)
+        local adjacentFrameLuaEntity = adjacentFrame:get_luaentity()
+        if adjacentFrameLuaEntity then
+            adjacentFrameLuaEntity:sendTo(newPosition)
+        end
+        local oppositeFrameLuaEntity = oppositeFrame:get_luaentity()
+        if oppositeFrameLuaEntity then
+            oppositeFrameLuaEntity:sendTo(newPosition)
+        end
     end
     newPosition.y = newPosition.y - 1
     if drill then
