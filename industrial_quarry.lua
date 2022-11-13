@@ -152,6 +152,7 @@ local function setUp(position, meta, step, vectorDirection)
 
     -- Building right side next to main node
     if step == 1 then
+        -- Move it right
         local localYaw = yaw + HALF_PI
         local localDir = yawToDir(localYaw)
         local currentPoint = vecAdd(vecMultiply(localDir, distance), position)
@@ -164,6 +165,7 @@ local function setUp(position, meta, step, vectorDirection)
         end
     -- Building left side next to main node
     elseif step == 2 then
+        -- Move it left
         local localYaw = yaw - HALF_PI
         local localDir = yawToDir(localYaw)
         local currentPoint = vecAdd(vecMultiply(localDir, distance), position)
@@ -176,9 +178,9 @@ local function setUp(position, meta, step, vectorDirection)
         end
     -- Building the right side forward
     elseif step == 3 then
+        -- Move it right
         local localYaw = yaw + HALF_PI
         local localDir = yawToDir(localYaw)
-        -- Move it right
         local currentPoint = vecAdd(vecMultiply(localDir, 8), position)
         -- Move it forward
         currentPoint = vecAdd(currentPoint, vecMultiply(vectorDirection, -distance))
@@ -191,9 +193,9 @@ local function setUp(position, meta, step, vectorDirection)
         end
     -- Building the left side forward
     elseif step == 4 then
+        -- Move it left
         local localYaw = yaw - HALF_PI
         local localDir = yawToDir(localYaw)
-        -- Move it left
         local currentPoint = vecAdd(vecMultiply(localDir, 8), position)
         -- Move it forward
         currentPoint = vecAdd(currentPoint, vecMultiply(vectorDirection, -distance))
@@ -207,9 +209,9 @@ local function setUp(position, meta, step, vectorDirection)
 
     -- Building the back bottom
     elseif step == 5 then
+        -- Move it right
         local localYaw = yaw + HALF_PI
         local localDir = yawToDir(localYaw)
-        -- Move it right
         local currentPoint = vecAdd(vecMultiply(localDir, 8), position)
         -- Move it forward
         currentPoint = vecAdd(currentPoint, vecMultiply(vectorDirection, (-WIDTH * 2)))
@@ -229,9 +231,9 @@ local function setUp(position, meta, step, vectorDirection)
 
     -- Building right support
     elseif step == 6 then
+        -- Move it right
         local localYaw = yaw + HALF_PI
         local localDir = yawToDir(localYaw)
-        -- Move it right
         local currentPoint = vecAdd(vecMultiply(localDir, 8), position)
         -- Move it up
         currentPoint = vecAdd(newVec(0,distance,0), currentPoint)
@@ -246,9 +248,9 @@ local function setUp(position, meta, step, vectorDirection)
         end
     -- Building the left support
     elseif step == 7 then
+        -- Move it left
         local localYaw = yaw - HALF_PI
         local localDir = yawToDir(localYaw)
-        -- Move it right
         local currentPoint = vecAdd(vecMultiply(localDir, 8), position)
         -- Move it up
         currentPoint = vecAdd(newVec(0,distance,0), currentPoint)
@@ -263,9 +265,9 @@ local function setUp(position, meta, step, vectorDirection)
         end
     -- Building back right support
     elseif step == 8 then
+        -- Move it right
         local localYaw = yaw + HALF_PI
         local localDir = yawToDir(localYaw)
-        -- Move it right
         local currentPoint = vecAdd(vecMultiply(localDir, 8), position)
         -- Move it forward
         currentPoint = vecAdd(currentPoint, vecMultiply(vectorDirection, (-WIDTH * 2)))
@@ -282,9 +284,9 @@ local function setUp(position, meta, step, vectorDirection)
         end
     -- Building the back left support
     elseif step == 9 then
+        -- Move it left
         local localYaw = yaw - HALF_PI
         local localDir = yawToDir(localYaw)
-        -- Move it right
         local currentPoint = vecAdd(vecMultiply(localDir, 8), position)
         -- Move it forward
         currentPoint = vecAdd(currentPoint, vecMultiply(vectorDirection, (-WIDTH * 2)))
@@ -301,9 +303,9 @@ local function setUp(position, meta, step, vectorDirection)
         end
     -- Building the top front
     elseif step == 10 then
+        -- Move it right
         local localYaw = yaw + HALF_PI
         local localDir = yawToDir(localYaw)
-        -- Move it right
         local currentPoint = vecAdd(vecMultiply(localDir, 8), vecAdd(position, newVec(0,WIDTH * 2, 0)))
         -- Move it left
         localYaw = yaw - HALF_PI
@@ -321,9 +323,9 @@ local function setUp(position, meta, step, vectorDirection)
 
     -- Building the top right
     elseif step == 11 then
+        -- Move it right
         local localYaw = yaw + HALF_PI
         local localDir = yawToDir(localYaw)
-        -- Move it right
         local currentPoint = vecAdd(vecMultiply(localDir, 8), vecAdd(position, newVec(0,WIDTH * 2, 0)))
         -- Move it forward
         currentPoint = vecAdd(currentPoint, vecMultiply(vectorDirection, -distance))
@@ -336,9 +338,9 @@ local function setUp(position, meta, step, vectorDirection)
         end
     -- Building the top left
     elseif step == 12 then
+        -- Move it left
         local localYaw = yaw - HALF_PI
         local localDir = yawToDir(localYaw)
-        -- Move it right
         local currentPoint = vecAdd(vecMultiply(localDir, 8), vecAdd(position, newVec(0,WIDTH * 2, 0)))
         -- Move it forward
         currentPoint = vecAdd(currentPoint, vecMultiply(vectorDirection, -distance))
@@ -351,9 +353,9 @@ local function setUp(position, meta, step, vectorDirection)
         end
     -- Building the top back
     elseif step == 13 then
+        -- Move it right
         local localYaw = yaw + HALF_PI
         local localDir = yawToDir(localYaw)
-        -- Move it right
         local currentPoint = vecAdd(vecMultiply(localDir, 8), vecAdd(position, newVec(0,WIDTH * 2, 0)))
         -- Move it forward
         currentPoint = vecAdd(currentPoint, vecMultiply(vectorDirection, (-WIDTH * 2)))
