@@ -35,6 +35,7 @@ local registeredNodes      = minetest.registered_nodes
 local registeredItems      = minetest.registered_items --? Why are these two different?
 local registeredCraftItems = minetest.registered_craftitems
 local getCraftResult       = minetest.get_craft_result
+local getNodeDrops         = minetest.get_node_drops
 local digNode              = minetest.dig_node
 local nodeDig              = minetest.node_dig
 local dirToYaw             = minetest.dir_to_yaw
@@ -243,6 +244,65 @@ function quarry:after_place_node(placer, _, pointedThing)
     getTimer(position):start(0)
 end
 
+local function linearScanDown(position, vectorDirection)
+    -- Move forward
+    local start = vecAdd(position, vecMultiply(vectorDirection, -((WIDTH * 2) - 1)))
+    -- Move left
+    local yaw = dirToYaw(vectorDirection) - (math.pi / 2)
+    local offset = vecMultiply(yawToDir(yaw), WIDTH - 1)
+    start = vecAdd(start, offset)
+    start.y = start.y + ((WIDTH * 2) - 1)
+
+    --Move forward
+    local finish = vecAdd(position, vecMultiply(vectorDirection, -1))
+    -- Move right
+    yaw = dirToYaw(vectorDirection) + (math.pi / 2)
+    offset = vecMultiply(yawToDir(yaw), WIDTH - 1)
+    finish = vecAdd(finish, offset)
+
+
+
+    --! Use the voxel manipulator to read this instead
+
+    local function checkIfNotAir(x,y,z)
+        if getNode(newVec(x,y,z)).name ~= "air" then return true end
+        return false
+    end
+    
+    local function scanDown()
+        for y = start.y, finish.y, -1 do
+            if start.x > finish.x then
+                for x = start.x, finish.x do
+                    if start.z > finish.z then
+                        for z = start.z, finish.z do
+                            if checkIfNotAir(x,y,z) then return y end
+                        end
+                    else
+                        for z = start.z, finish.z, -1 do
+                            if checkIfNotAir(x,y,z) then return y end
+                        end
+                    end
+                end
+            else
+                for x = start.x, finish.x, -1 do
+                    if start.z > finish.z then
+                        for z = start.z, finish.z do
+                            if checkIfNotAir(x,y,z) then return y end
+                        end
+                    else
+                        for z = start.z, finish.z, -1 do
+                            if checkIfNotAir(x,y,z) then return y end
+                        end
+                    end
+                end
+            end
+        end
+        return finish.y
+    end
+
+    return scanDown()
+end
+
 local function addDrill(position, vectorDirection, meta)
     local newPosition = vecCopy(position)
 
@@ -307,6 +367,8 @@ local function addDrill(position, vectorDirection, meta)
         drill:get_luaentity():sendTo(newPosition)
         drill:get_luaentity():setBaseYPosition(position.y + (WIDTH * 2))
     end
+    
+    newPosition.y = linearScanDown(position, vectorDirection)
     
 
     setEntityTable(position, {
@@ -649,10 +711,9 @@ function quarry:on_timer()
         end
         
         -- Going straight across
-        
-            
         if checkHeadWay() then
             move()
+        -- Turning trigger
         else
             if forward == 1 then
                 setNewDirection(vecMultiply(vectorDirection, -1))
@@ -663,15 +724,22 @@ function quarry:on_timer()
             end
         end
 
+        -- Turning logic
         if turning == 1 then
 
             local failure = false
 
             -- Starts moving the other direction
             if not checkHeadWay() then
+                digNode(currentPosition)
                 failure = true
                 setForward(ternary(forward == 1, 0, 1))
             else
+                move()
+            end
+
+            if failure then
+                setNewDirection(newVec(0, -1, 0))
                 move()
             end
 
@@ -689,17 +757,9 @@ function quarry:on_timer()
             local newDirection = vecDirection(origin, destination)
             setNewDirection(newDirection)
             setTurning(0)
-
-            if failure then
-                newDirection.y = -1
-                setNewDirection(newDirection)
-                move()
-                newDirection.y = 0
-                setNewDirection(newDirection)
-            end
         end
 
-        refreshTime = 0.01
+        refreshTime = 0.5 / tier
     end
 
     timer:start(refreshTime)
