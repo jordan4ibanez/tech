@@ -783,7 +783,7 @@ function quarry:on_timer()
             setTurning(0)
         end
 
-        refreshTime = 0.5 / tier
+        refreshTime = 1.5 / tier
     end
 
     timer:start(refreshTime)
@@ -794,6 +794,7 @@ registerNode(
     quarry
 )
 
+addInserterContainer("input", quarryNodeString, "main")
 
 
 end
