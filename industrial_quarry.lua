@@ -817,7 +817,9 @@ function quarry:on_timer()
                 node = node
             })
 
-            playSound("tech_quarry_break", {pos = currentPosition})
+            if node and node.name and node.name ~= "air" then
+                playSound("tech_quarry_break", {pos = currentPosition})
+            end
 
             for _,stack in ipairs(drops) do
                 if inv:room_for_item("main", stack) then
