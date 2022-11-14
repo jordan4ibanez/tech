@@ -261,6 +261,7 @@ local function linearScanDown(position, vectorDirection)
     yaw = dirToYaw(vectorDirection) + (math.pi / 2)
     offset = vecMultiply(yawToDir(yaw), WIDTH - 1)
     finish = vecAdd(finish, offset)
+    finish.y = finish.y - 1
 
 
 
@@ -651,6 +652,7 @@ local function setUp(position, meta, step, vectorDirection)
 end
 
 local function checkForIron(inv)
+    if true then return true end
     local gottenItem = inv:remove_item("main", ItemStack("default:steel_ingot")):get_name()
     if gottenItem == "" then return false end
     return true
@@ -715,14 +717,19 @@ function quarry:on_timer()
         end
 
         local function deleteEntities(adjacentFrame, oppositeFrame, drill)
-            if adjacentFrame then
-                adjacentFrame:remove()
+            write("---------------")
+            write(dump(adjacentFrame))
+            write(dump(oppositeFrame))
+            write(dump(drill))
+            write("---------------")
+            if adjacentFrame and adjacentFrame.object then
+                adjacentFrame.object:remove()
             end
-            if oppositeFrame then
-                oppositeFrame:remove()
+            if oppositeFrame and oppositeFrame.object then
+                oppositeFrame.object:remove()
             end
-            if drill then
-                drill:remove()
+            if drill and drill.object then
+                drill.object:remove()
             end
         end
 
