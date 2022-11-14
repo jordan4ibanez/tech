@@ -243,8 +243,72 @@ function quarry:after_place_node(placer, _, pointedThing)
     meta:set_int("distance", 1)
     meta:set_int("turning", 0)
     meta:set_int("forward", 0)
+    meta:set_int("checked", 0)
     getTimer(position):start(0)
 end
+
+
+local function checkRoom(position, vectorDirection)
+    -- Move forward
+    local start = vecAdd(position, vecMultiply(vectorDirection, -((WIDTH * 2))))
+    -- Move left
+    local yaw = dirToYaw(vectorDirection) - (math.pi / 2)
+    local offset = vecMultiply(yawToDir(yaw), WIDTH)
+    start = vecAdd(start, offset)
+    start.y = start.y + ((WIDTH * 2))
+
+    --Move forward
+    local finish = vecCopy(position)-- vecAdd(position, vecMultiply(vectorDirection, -1))
+    -- Move right
+    yaw = dirToYaw(vectorDirection) + (math.pi / 2)
+    offset = vecMultiply(yawToDir(yaw), WIDTH)
+    finish = vecAdd(finish, offset)
+
+
+
+    --! Use the voxel manipulator to read this instead
+
+    local function checkIfNotFrame(x,y,z)
+        local name = getNode(newVec(x,y,z)).name
+        if name:match("tech:quarry_frame_") then return false end
+        return true
+    end
+    
+    -- Wow, the mountains are beautiful this time of year
+    local function scanDown()
+        for y = start.y, finish.y, -1 do
+            if start.x < finish.x then
+                for x = start.x, finish.x do
+                    if start.z < finish.z then
+                        for z = start.z, finish.z do
+                            if not checkIfNotFrame(x,y,z) then return false end
+                        end
+                    else
+                        for z = start.z, finish.z, -1 do
+                            if not checkIfNotFrame(x,y,z) then return false end
+                        end
+                    end
+                end
+            else
+                for x = start.x, finish.x, -1 do
+                    if start.z < finish.z then
+                        for z = start.z, finish.z do
+                            if not checkIfNotFrame(x,y,z) then return false end
+                        end
+                    else
+                        for z = start.z, finish.z, -1 do
+                            if not checkIfNotFrame(x,y,z) then return false end
+                        end
+                    end
+                end
+            end
+        end
+        return true
+    end
+
+    return scanDown()
+end
+
 
 local function linearScanDown(position, vectorDirection)
     -- Move forward
@@ -253,7 +317,7 @@ local function linearScanDown(position, vectorDirection)
     local yaw = dirToYaw(vectorDirection) - (math.pi / 2)
     local offset = vecMultiply(yawToDir(yaw), WIDTH - 1)
     start = vecAdd(start, offset)
-    start.y = start.y + ((WIDTH * 2) - 1)
+    start.y = start.y + (WIDTH * 2)
 
     --Move forward
     local finish = vecAdd(position, vecMultiply(vectorDirection, -1))
@@ -424,7 +488,16 @@ local function setUp(position, meta, step, vectorDirection)
     -- Building right side next to main node
     if step == 1 then
 
-        write("CHECK FOR CONFLICTS HERE")
+        local checked = meta:get_int("checked")
+
+        if checked == 0 then
+            local success = checkRoom(position, vectorDirection)
+            if not success then
+                return false
+            else
+                meta:set_int("checked", 1)
+            end
+        end
 
         -- Move it right
         local localYaw = yaw + HALF_PI
@@ -649,6 +722,7 @@ local function setUp(position, meta, step, vectorDirection)
             addDrill(position, vectorDirection, meta, true)
         end
     end
+    return true
 end
 
 local function checkForIron(inv)
@@ -671,8 +745,8 @@ function quarry:on_timer()
     -- Building self
     if setUpStep > 0 then
         if checkForIron(inv) then
-            setUp(self, meta, setUpStep, vectorDirection)
-            refreshTime = 0.25 / tier
+            local success = setUp(self, meta, setUpStep, vectorDirection)
+            refreshTime = ternary(success, 0.25 / tier, 5)
         end
     -- Mining
     else
