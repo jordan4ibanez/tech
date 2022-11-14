@@ -717,11 +717,6 @@ function quarry:on_timer()
         end
 
         local function deleteEntities(adjacentFrame, oppositeFrame, drill)
-            write("---------------")
-            write(dump(adjacentFrame))
-            write(dump(oppositeFrame))
-            write(dump(drill))
-            write("---------------")
             if adjacentFrame and adjacentFrame.object then
                 adjacentFrame.object:remove()
             end
