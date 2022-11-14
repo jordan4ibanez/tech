@@ -421,6 +421,9 @@ local function setUp(position, meta, step, vectorDirection)
     --! Turn this mess into a switch
     -- Building right side next to main node
     if step == 1 then
+
+        write("CHECK FOR CONFLICTS HERE")
+
         -- Move it right
         local localYaw = yaw + HALF_PI
         local localDir = yawToDir(localYaw)
@@ -694,17 +697,6 @@ function quarry:on_timer()
             forward = newForward
         end
 
-        local entities = getEntityTable(self)
-        -- Just force the game to add these entities
-        while not entities do
-            addDrill(self, vectorDirection, meta)
-            entities = getEntityTable(self)
-        end
-
-        local adjacentFrame = entities.adjacentFrame
-        local oppositeFrame = entities.oppositeFrame
-        local drill         = entities.drill
-
         local function checkHeadWay()
             local checkPosition = newVec(
                 currentPosition.x,
@@ -719,6 +711,87 @@ function quarry:on_timer()
                 playSound("tech_quarry_move", {pos = checkPosition})
             end
             return goodToGo
+        end
+
+        local function deleteEntities(adjacentFrame, oppositeFrame, drill)
+            if adjacentFrame then
+                adjacentFrame:remove()
+            end
+            if oppositeFrame then
+                oppositeFrame:remove()
+            end
+            if drill then
+                drill:remove()
+            end
+        end
+
+        local function checkEntities()
+            local entities = getEntityTable(self)
+            local solved = false
+            
+            -- Just force the game to add these entities
+            if not entities then
+                addDrill(self, vectorDirection, meta)
+                entities = getEntityTable(self)
+            end
+
+            -- If you
+            if not entities then return nil end
+
+            write("stuck at: ", self.x, ",",self.y,",",self.z)
+
+            -- If there were entities, now we need to check if they actually exist
+            local adjacentFrame = entities.adjacentFrame
+            local oppositeFrame = entities.oppositeFrame
+            local drill         = entities.drill
+
+            local failState = false
+
+            local adjacentFrameLuaEntity
+            local oppositeFrameLuaEntity
+            local drillLuaEntity
+
+            if adjacentFrame then
+                adjacentFrameLuaEntity = adjacentFrame:get_luaentity()
+            end
+            if oppositeFrame then
+                oppositeFrameLuaEntity = oppositeFrame:get_luaentity()
+            end
+            if drill then
+                drillLuaEntity = drill:get_luaentity()
+            end
+
+            if not adjacentFrameLuaEntity then
+                deleteEntities(adjacentFrameLuaEntity, oppositeFrameLuaEntity, drillLuaEntity)
+                -- deleteEntities(adjacentFrame, oppositeFrame, drill)
+                failState = true
+            end
+            if not oppositeFrameLuaEntity then
+                deleteEntities(adjacentFrameLuaEntity, oppositeFrameLuaEntity, drillLuaEntity)
+                -- deleteEntities(adjacentFrame, oppositeFrame, drill)
+                failState = true
+            end
+            if not drillLuaEntity then
+                deleteEntities(adjacentFrameLuaEntity, oppositeFrameLuaEntity, drillLuaEntity)
+                -- deleteEntities(adjacentFrame, oppositeFrame, drill)
+                failState = true
+            end
+
+            if failState then
+                addDrill(self, vectorDirection, meta)
+            end
+
+            if not failState then
+                return adjacentFrameLuaEntity, oppositeFrameLuaEntity, drillLuaEntity
+            end
+        end
+
+        local function moveEntities()
+            local adjacentFrameLuaEntity, oppositeFrameLuaEntity, drillLuaEntity = checkEntities()
+            if not adjacentFrameLuaEntity or not oppositeFrameLuaEntity or not drillLuaEntity then return false end
+            adjacentFrameLuaEntity:sendTo(currentPosition)
+            oppositeFrameLuaEntity:sendTo(currentPosition)
+            drillLuaEntity:sendTo(currentPosition)
         end
 
         local function move()
@@ -756,10 +829,9 @@ function quarry:on_timer()
             
             currentPosition = vecAdd(currentPosition, currentDirection)
             setNewPosition(currentPosition)
-            -- debugParticle(currentPosition)
-            adjacentFrame:sendTo(currentPosition)
-            oppositeFrame:sendTo(currentPosition)
-            drill:sendTo(currentPosition)
+
+            moveEntities()
+
             return true
         end
         
