@@ -868,39 +868,46 @@ function quarry:on_timer()
             drillLuaEntity:sendTo(currentPosition)
         end
 
+        local inAir = false
+
         local function move()
 
             local drops = getNodeDrops(getNode(currentPosition))
             -- This can either cause a loss of items, OR, I could make it create an infinite item glitch
             -- I prefer the former
             local node = getNode(currentPosition)
-            removeNode(currentPosition)
-
-            addParticleSpawner({
-                time = 0.001,
-                amount = 10,
-                minpos = vecSubtract(currentPosition, newVec(0.5,0.5,0.5)),
-                maxpos = vecAdd(currentPosition, newVec(0.5,0.5,0.5)),
-                minvel = {x=-1, y=1, z=-1},
-                maxvel = {x=1, y=2, z=1},
-                minacc = {x=0, y=-9.81, z=0},
-                maxacc = {x=0, y=-9.81, z=0},
-                minsize = 0,
-                maxsize = 0,
-                collisiondetection = true,
-                node = node
-            })
 
             if node and node.name and node.name ~= "air" then
-                playSound("tech_quarry_break", {pos = currentPosition})
-            end
 
-            for _,stack in ipairs(drops) do
-                if inv:room_for_item("main", stack) then
-                    inv:add_item("main", stack)
-                else
-                    return false
+                removeNode(currentPosition)
+
+                addParticleSpawner({
+                    time = 0.001,
+                    amount = 10,
+                    minpos = vecSubtract(currentPosition, newVec(0.5,0.5,0.5)),
+                    maxpos = vecAdd(currentPosition, newVec(0.5,0.5,0.5)),
+                    minvel = {x=-1, y=1, z=-1},
+                    maxvel = {x=1, y=2, z=1},
+                    minacc = {x=0, y=-9.81, z=0},
+                    maxacc = {x=0, y=-9.81, z=0},
+                    minsize = 0,
+                    maxsize = 0,
+                    collisiondetection = true,
+                    node = node
+                })
+
+            
+                playSound("tech_quarry_break", {pos = currentPosition})
+
+                for _,stack in ipairs(drops) do
+                    if inv:room_for_item("main", stack) then
+                        inv:add_item("main", stack)
+                    else
+                        return false
+                    end
                 end
+            else
+                inAir = true
             end
             
             currentPosition = vecAdd(currentPosition, currentDirection)
@@ -969,7 +976,12 @@ function quarry:on_timer()
             setTurning(0)
         end
 
-        refreshTime = 1.5 / tier
+        if inAir then
+            refreshTime = 0.01
+        else
+            refreshTime = 1.5 / tier
+        end
+        
     end
 
     timer:start(refreshTime)
