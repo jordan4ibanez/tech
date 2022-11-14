@@ -735,10 +735,8 @@ function quarry:on_timer()
                 entities = getEntityTable(self)
             end
 
-            -- If you
+            -- Just escape rather than do a loop, who really cares
             if not entities then return nil end
-
-            write("stuck at: ", self.x, ",",self.y,",",self.z)
 
             -- If there were entities, now we need to check if they actually exist
             local adjacentFrame = entities.adjacentFrame
