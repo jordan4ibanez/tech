@@ -727,7 +727,6 @@ function quarry:on_timer()
 
         local function checkEntities()
             local entities = getEntityTable(self)
-            local solved = false
             
             -- Just force the game to add these entities
             if not entities then
