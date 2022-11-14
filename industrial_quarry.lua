@@ -271,11 +271,12 @@ local function linearScanDown(position, vectorDirection)
         return false
     end
     
+    -- Wow, the mountains are beautiful this time of year
     local function scanDown()
         for y = start.y, finish.y, -1 do
-            if start.x > finish.x then
+            if start.x < finish.x then
                 for x = start.x, finish.x do
-                    if start.z > finish.z then
+                    if start.z < finish.z then
                         for z = start.z, finish.z do
                             if checkIfNotAir(x,y,z) then return y end
                         end
@@ -287,7 +288,7 @@ local function linearScanDown(position, vectorDirection)
                 end
             else
                 for x = start.x, finish.x, -1 do
-                    if start.z > finish.z then
+                    if start.z < finish.z then
                         for z = start.z, finish.z do
                             if checkIfNotAir(x,y,z) then return y end
                         end
