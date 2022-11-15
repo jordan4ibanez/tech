@@ -42,6 +42,7 @@ local vecAdd               = vector.add
 local vecFloor             = vector.floor
 local vecRound             = vector.round
 local vecDirection         = vector.direction
+local vecDistance          = vector.distance
 local vecCopy              = vector.copy
 local vecEquals            = vector.equals
 local vecLerp              = vector.lerp
@@ -146,9 +147,17 @@ local function resolveBeltEntity(self, object)
     if isPlayer(object) then return false end
     object = object:get_luaentity()
     if not object then return false end
-    if not object.name then return false end
     if object == self then return false end
-    if object.name == "tech:beltItem" then return true end
+    if not object.name then return false end
+    if object.name == "tech:beltItem" then
+        local distance = vecDistance(self.object:get_pos(), object.object:get_pos())
+        -- This is a glitch due to stack operations, force pass it through
+        if distance == 0 then
+            -- write("Heisenbug has occured due to stack operations")
+            return false
+        end
+        return true
+    end
 end
 
 function beltItem:findRoom(searchingPosition, radius)
