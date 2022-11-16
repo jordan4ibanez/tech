@@ -783,8 +783,15 @@ function quarry:on_timer()
             -- debugParticle(checkPosition)
             checkPosition = vecAdd(checkPosition, currentDirection)
 
-            local goodToGo = getNode(checkPosition).name ~= frameString
+            local nextNode = getNode(checkPosition).name
+
+            local goodToGo = nextNode ~= frameString
+
             if goodToGo then
+
+                -- Quarry will sail away if not in loaded map block
+                if nextNode == "ignore" then return -1 end
+
                 playSound("tech_quarry_move", {pos = checkPosition})
             end
             return goodToGo
@@ -917,13 +924,20 @@ function quarry:on_timer()
 
             return true
         end
+
+        local headWayResult = checkHeadWay()
         
         -- Going straight across
-        if checkHeadWay() then
+        if headWayResult == true then
             if not move() then
                 timer:start(refreshTime)
                 return
             end
+        -- Trying to enter an ignore node
+        elseif headWayResult == -1 then
+            -- write("trying to enter unloaded map block! ", refreshTime)
+            timer:start(refreshTime)
+            return
         -- Turning trigger
         else
             if forward == 1 then
