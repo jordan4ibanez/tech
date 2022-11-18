@@ -94,8 +94,13 @@ registerNode(
 
 
 --* Switcher belts
+
+local switchBeltTextureString = buildString("belt_",beltSpeed,"_turn.png",  "^[transformFY")
+
+for _,side in ipairs({"left", "right"}) do
+
 local switchNameString = buildString(
-    "tech:belt_switch_", beltSpeed
+    "tech:belt_switch_", beltSpeed, "_", side
 )
 
 beltSwitch[switchNameString] = function()
@@ -104,21 +109,27 @@ end
 
 switchBelts[switchNameString] = true
 
-
 local definition = {
     paramtype  = "light",
     paramtype2 = "facedir",
     drawtype   = "mesh",
     description = buildString("Belt Tier ", beltSpeed, " Switch"),
-    mesh = "belt_0.b3d",
+    mesh = buildString("switch_belt_", side, ".b3d"),
     tiles = {
-        buildString("belt_",beltSpeed,"_turn.png")
+        switchBeltTextureString
     },
     visual_scale = 0.5,
     groups = {
         dig_immediate = 3
-    },
-    after_place_node = function(_, placer, _, pointedThing)
+    }
+}
+if side == "left" then
+
+    local rightnameString = buildString(
+        "tech:belt_switch_", beltSpeed, "_right"
+    )
+
+    function definition:after_place_node(placer, _, pointedThing)
         local lookDir = placer:get_look_dir()
         local fourDir = convertDir(dirToFourDir(lookDir))
         write(dirToFourDir(lookDir))
@@ -134,21 +145,21 @@ local definition = {
 
         local right = vecAdd(left, dir)
 
-        if getNode(left).name ~= switchNameString or getNode(right).name ~= "air" then 
+        if getNode(left).name ~= switchNameString or getNode(right).name ~= "air" then
             write("delete above node and drop item")
             return
         end
 
         setNode(left, {name = switchNameString, param2 = fourDir})
-        setNode(right, {name = "default:glass"})
+        setNode(right, {name = rightnameString, param2 = fourDir})
     end
-}
+end
 
 registerNode(
     switchNameString,
     definition
 );
-
+end
 
 
 
