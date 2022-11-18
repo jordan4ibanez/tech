@@ -8,6 +8,7 @@
         "flatBelts",
         "grabFlatBelts",
         "grabBeltSwitch",
-        "grabTurnBeltSwitch"
+        "grabTurnBeltSwitch",
+        "grabSwitchBeltsSwitch"
     ]
 }
