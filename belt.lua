@@ -47,8 +47,12 @@ local beltSwitch = {}
 local flatBelts = {}
 local turnBelts = {}
 
+local switchBelts = {}
+
 for _,beltSpeed in immutableIpairs(beltSpeeds) do
 
+
+--* Turn belts
 local turnNameString = buildString(
     "tech:belt_turn_", beltSpeed
 )
@@ -85,6 +89,50 @@ registerNode(
     turnNameString,
     definition
 );
+
+
+--* Switcher belts
+local switchNameString = buildString(
+    "tech:belt_switch_", beltSpeed
+)
+
+beltSwitch[switchNameString] = function()
+    return beltSpeed
+end
+
+switchBelts[switchNameString] = true
+
+
+local definition = {
+    paramtype  = "light",
+    paramtype2 = "facedir",
+    drawtype   = "mesh",
+    description = buildString("Belt Tier ", beltSpeed, " Switch"),
+    mesh = "belt_0.b3d",
+    tiles = {
+        buildString("belt_",beltSpeed,"_turn.png")
+    },
+    visual_scale = 0.5,
+    groups = {
+        dig_immediate = 3
+    },
+    after_place_node = function(_, placer, _, pointedThing)
+        local lookDir = placer:get_look_dir()
+        local fourDir = convertDir(dirToFourDir(lookDir))
+        write(dirToFourDir(lookDir))
+        setNode(pointedThing.above, {name = turnNameString, param2 = fourDir})
+
+        write("Then add the right side")
+    end
+}
+
+registerNode(
+    switchNameString,
+    definition
+);
+
+
+
 
 
 for _,beltAngle in immutableIpairs(beltAngles) do
@@ -145,6 +193,8 @@ flatBelts = boolSwitch:new(flatBelts)
 
 turnBelts = boolSwitch:new(turnBelts)
 
+switchBelts = boolSwitch:new(switchBelts)
+
 -- Globalize it into global scope
 
 function grabFlatBelts()
@@ -157,4 +207,8 @@ end
 
 function grabTurnBeltSwitch()
     return turnBelts
+end
+
+function grabSwitchBeltsSwitch()
+    return switchBelts
 end
