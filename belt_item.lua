@@ -43,6 +43,7 @@ local vecFloor             = vector.floor
 local vecRound             = vector.round
 local vecDirection         = vector.direction
 local vecDistance          = vector.distance
+local vecLength            = vector.length
 local vecCopy              = vector.copy
 local vecEquals            = vector.equals
 local vecLerp              = vector.lerp
@@ -59,6 +60,7 @@ local abs   = math.abs
 local beltSwitch = grabBeltSwitch()
 local turnBeltSwitch = grabTurnBeltSwitch()
 local flatBeltSwitch = grabFlatBelts()
+local switchBeltSwitch = grabSwitchBeltsSwitch()
 
 --! Beginning of belt item object
 
@@ -221,6 +223,7 @@ function beltItem:movement(object, delta)
     end
 
     object:move_to(newPosition, false)
+    -- object:set_pos(newPosition)
 end
 
 function beltItem:setMovementProgress(movementProgress)
@@ -457,12 +460,67 @@ function beltItem:updatePosition(pos, initialPlacement)
         end
 
         turning = true
+        
+    elseif switchBeltSwitch:match(nodeName) then
+
+        -- Add a goto statement for trying it again with a straight belt
+
+        -- Switches are extremely rigid
+        if nodeDirection ~= oldNodeDirection then return false end
+
+        -- First do the flat belt calculation
+        local vectorDirection = fourDirToDir(nodeDirection)
+        -- Due to how this was set up, this is inverted
+        local inverseDirection = vecMultiply(vectorDirection, 0.5)
+        local direction = vecMultiply(inverseDirection, -1)
+        -- Set the rigid inline positions - They are on the center of the node
+        local originPosition      = vecAdd(integerPosition, inverseDirection)
+        local destinationPosition = vecAdd(integerPosition, direction)
+        -- The lane is 90 degrees adjacent to the direction
+        local directionModifier = ternary(laneStorage == 1, 1, -1) * (math.pi / 2)
+        local yaw = dirToYaw(direction)
+        local originalYaw = yaw
+        yaw = yaw + directionModifier
+        local laneDirection = vecMultiply(vecRound(yawToDir(yaw)), 0.25)
+        
+        -- Next store the values outside this scope
+        storageIntegerPosition     = integerPosition
+        storageNextIntegerPosition = vecAdd(integerPosition, vecMultiply(vectorDirection, -1))
+        storageOriginPosition      = vecAdd(originPosition, laneDirection)
+        storageDestinationPosition = vecAdd(destinationPosition, laneDirection)
+        storageMovementProgress = 0
+
+        -- Next get the new switch direction
+        yaw = originalYaw + (ternary(nodeName:find("left"), -1, 1) * (math.pi / 2))
+        if nodeName:find("left") then
+            write("yep that's left")
+        else
+            write("yep that's to the right now")
+        end
+        local lanePositionModifier = yawToDir(yaw)
+
+        -- Finally, everything is pushed in that direction
+        storageIntegerPosition     = vecAdd(storageIntegerPosition, lanePositionModifier)
+        storageNextIntegerPosition = vecAdd(storageNextIntegerPosition, lanePositionModifier)
+        storageOriginPosition      = vecAdd(storageOriginPosition, lanePositionModifier)
+        storageDestinationPosition = vecAdd(storageDestinationPosition, lanePositionModifier)
+
+
+
+        -- debugParticle(vecAdd(storageOriginPosition, lanePositionModifier))
+
+
+
+        -- return false
+    else
+        write("this has not been implemented yet")
+        return false
     end
 
     local newPosition = vecLerp(storageOriginPosition, storageDestinationPosition, storageMovementProgress)
 
     
-    if not self:findRoom(newPosition, 0.25) and not initialPlacement then
+    if not self:findRoom(newPosition, 0.249) and not initialPlacement and not turning then
         return false
     end
 
