@@ -31,6 +31,8 @@ local registerCraftItem    = minetest.register_craftitem
 local registeredNodes      = minetest.registered_nodes
 local registeredItems      = minetest.registered_items --? Why are these two different?
 local registeredCraftItems = minetest.registered_craftitems
+local dirToYaw             = minetest.dir_to_yaw
+local yawToDir             = minetest.yaw_to_dir
 local newVec               = vector.new
 local vecZero              = vector.zero
 local vecMultiply          = vector.multiply
@@ -120,9 +122,25 @@ local definition = {
         local lookDir = placer:get_look_dir()
         local fourDir = convertDir(dirToFourDir(lookDir))
         write(dirToFourDir(lookDir))
-        setNode(pointedThing.above, {name = turnNameString, param2 = fourDir})
 
-        write("Then add the right side")
+        -- Left is where you're placing, it always places second node to the right
+        local left = pointedThing.above
+        
+        -- Turn it to the right
+        local dir = fourDirToDir(fourDir)
+        local yaw = dirToYaw(dir)
+        yaw = yaw + (math.pi / 2)
+        dir = yawToDir(yaw)
+
+        local right = vecAdd(left, dir)
+
+        if getNode(left).name ~= switchNameString or getNode(right).name ~= "air" then 
+            write("delete above node and drop item")
+            return
+        end
+
+        setNode(left, {name = switchNameString, param2 = fourDir})
+        setNode(right, {name = "default:glass"})
     end
 }
 
@@ -134,6 +152,7 @@ registerNode(
 
 
 
+--* The rest of the belts
 
 for _,beltAngle in immutableIpairs(beltAngles) do
 
