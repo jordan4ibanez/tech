@@ -243,8 +243,8 @@ function beltItem:movement(object, delta)
         return
     end
 
-    -- object:move_to(newPosition, false)
-    object:set_pos(newPosition)
+    object:move_to(newPosition, false)
+    -- object:set_pos(newPosition)
 end
 
 function beltItem:setMovementProgress(movementProgress)
@@ -559,7 +559,7 @@ function beltItem:updatePosition(pos, initialPlacement)
 
     local newPosition = vecLerp(storageOriginPosition, storageDestinationPosition, storageMovementProgress)
 
-    debugParticle(newPosition)
+    -- debugParticle(newPosition)
     
     if not self:findRoom(newPosition, 0.4) and not initialPlacement then
         -- A belt switch failed, rebuild the node name and try to send it straight through
@@ -599,7 +599,7 @@ end
 
 
 function beltItem:on_step(delta)
-    if self.warmUpTimer > 0 then
+    if self.warmUpTimer and self.warmUpTimer > 0 then
         self.warmUpTimer = self.warmUpTimer - delta
         return
     end
