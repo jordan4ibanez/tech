@@ -135,21 +135,14 @@ local function buildString(...)
     return stringBuilder
 end
 
--- This is pulled from master branch - Modified because I felt like it
-local dirSwitchX = switch:new({
-    [true]  = function() return 3 end,
-    [false] = function() return 1 end
-})
-local dirSwitchZ = switch:new({
-    [true]  = function() return 2 end,
-    [false] = function() return 0 end
-})
-local dirMasterSwitch = switch:new({
-    [true]  = function(dir) return dirSwitchX:match(dir.x < 0) end,
-    [false] = function(dir) return dirSwitchZ:match(dir.z < 0) end
-})
+-- This is pulled from master branch - Modified because I felt like it - This is optimized by Luatic
 local function dirToFourDir(dir)
-    return dirMasterSwitch:match(math.abs(dir.x) > math.abs(dir.z), dir)
+    if math.abs(dir.x) > math.abs(dir.z) then
+        if dir.x < 0 then return 3 end
+        return 1
+    end
+    if dir.z < 0 then return 2 end
+    return 0
 end
 
 -- Table of possible dirs
