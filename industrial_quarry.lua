@@ -55,6 +55,10 @@ local isPlayer             = minetest.is_player
 local playSound            = minetest.sound_play
 local addParticleSpawner   = minetest.add_particlespawner
 
+-- Lua
+local PI = math.pi
+local HALF_PI = math.pi / 2
+
 local quarryFormspec = buildString(
     "size[8,9]",
     "list[context;main;0,0.3;8,4;]",
@@ -128,8 +132,6 @@ registerEntity(
 )
 
 for tier = 1,3 do
-
-local HALF_PI = math.pi / 2
 local WIDTH   = 8
 local frameString = buildString("tech:quarry_frame_", tier)
 local frameTextureString = buildString("tech_quarry_frame_", tier, ".png")
@@ -252,7 +254,7 @@ local function checkRoom(position, vectorDirection)
     -- Move forward
     local start = vecAdd(position, vecMultiply(vectorDirection, -((WIDTH * 2))))
     -- Move left
-    local yaw = dirToYaw(vectorDirection) - (math.pi / 2)
+    local yaw = dirToYaw(vectorDirection) - HALF_PI
     local offset = vecMultiply(yawToDir(yaw), WIDTH)
     start = vecAdd(start, offset)
     start.y = start.y + ((WIDTH * 2))
@@ -260,7 +262,7 @@ local function checkRoom(position, vectorDirection)
     --Move forward
     local finish = vecCopy(position)-- vecAdd(position, vecMultiply(vectorDirection, -1))
     -- Move right
-    yaw = dirToYaw(vectorDirection) + (math.pi / 2)
+    yaw = dirToYaw(vectorDirection) + HALF_PI
     offset = vecMultiply(yawToDir(yaw), WIDTH)
     finish = vecAdd(finish, offset)
 
@@ -314,7 +316,7 @@ local function linearScanDown(position, vectorDirection)
     -- Move forward
     local start = vecAdd(position, vecMultiply(vectorDirection, -((WIDTH * 2) - 1)))
     -- Move left
-    local yaw = dirToYaw(vectorDirection) - (math.pi / 2)
+    local yaw = dirToYaw(vectorDirection) - HALF_PI
     local offset = vecMultiply(yawToDir(yaw), WIDTH - 1)
     start = vecAdd(start, offset)
     start.y = start.y + (WIDTH * 2)
@@ -322,7 +324,7 @@ local function linearScanDown(position, vectorDirection)
     --Move forward
     local finish = vecAdd(position, vecMultiply(vectorDirection, -1))
     -- Move right
-    yaw = dirToYaw(vectorDirection) + (math.pi / 2)
+    yaw = dirToYaw(vectorDirection) + HALF_PI
     offset = vecMultiply(yawToDir(yaw), WIDTH - 1)
     finish = vecAdd(finish, offset)
     finish.y = finish.y - 1
@@ -461,7 +463,7 @@ local function addDrill(position, vectorDirection, meta, new)
     -- The calculation is already complete here, drop the variable in storage
     if new then
         meta:set_string("currentPosition", serialize(newPosition))
-        meta:set_string("currentDirection", serialize(yawToDir(yaw + math.pi)))
+        meta:set_string("currentDirection", serialize(yawToDir(yaw + PI)))
     end
 end
 
