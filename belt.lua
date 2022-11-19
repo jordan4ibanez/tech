@@ -227,8 +227,27 @@ if side == "left" then
         inv:set_stack(listname, index, "")
         return 0
     end
+
+    function definition:after_destruct(oldNode)
+        if oldNode.name == "air" then return end
+        local rotation = oldNode.param2
+        local dir = fourDirToDir(rotation)
+        local yaw = dirToYaw(dir)
+        yaw = yaw + HALF_PI
+        dir = yawToDir(yaw)
+        removeNode(vecAdd(self, dir))
+        
+    end
 else
-    
+    function definition:after_destruct(oldNode)
+        if oldNode.name == "air" then return end
+        local rotation = oldNode.param2
+        local dir = fourDirToDir(rotation)
+        local yaw = dirToYaw(dir)
+        yaw = yaw - HALF_PI
+        dir = yawToDir(yaw)
+        removeNode(vecAdd(self, dir))
+    end
 end
 
 registerNode(
