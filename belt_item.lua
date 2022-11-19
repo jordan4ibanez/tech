@@ -514,6 +514,10 @@ function beltItem:updatePosition(pos, initialPlacement)
         -- Switches are extremely rigid
         if nodeDirection ~= oldNodeDirection then return false end
 
+
+        --! Filter check goes here!
+        
+
         -- First do the flat belt calculation
         local vectorDirection = fourDirToDir(nodeDirection)
         -- Due to how this was set up, this is inverted
@@ -539,16 +543,8 @@ function beltItem:updatePosition(pos, initialPlacement)
         -- Next get the new switch direction
         yaw = originalYaw + (ternary(nodeName:find("left"), -1, 1) * (math.pi / 2))
 
-        write(yaw)
 
-        if nodeName:find("left") then
-            -- write("yep that's left")
-        else
-            -- write("yep that's to the right now")
-        end
         local lanePositionModifier = vecRound(yawToDir(yaw))
-
-        write(dump(lanePositionModifier))
 
         -- Finally, everything is pushed in that direction
         storageIntegerPosition     = vecAdd(storageIntegerPosition, lanePositionModifier)
