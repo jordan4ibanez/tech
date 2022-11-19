@@ -148,49 +148,18 @@ local function getDirectionChangeLane(newRotation, currentRotation)
 end
 
 
-local function resolveBeltEntity(self, object, searchingPosition, originPosition, destinationPosition, disableDirCheck)
+local function resolveBeltEntity(self, object, searchingPosition)
     if not object then return false end
     if isPlayer(object) then return false end
     object = object:get_luaentity()
     if not object then return false end
-    if object == self then return false end
+    if object.object == self.object then return false end
     if not object.name then return false end
     if object.name ~= "tech:beltItem" then return false end
     
     local pos1 = searchingPosition
     local pos2 = object.object:get_pos()
-        
-    -- This is a glitch due to stack operations, force pass it through
-    --[[
-    if vecDistance(pos1, pos2) == 0 then
-        -- write("Heisenbug has occured due to stack operations")
-        return false
-    end
-    ]]
 
-    local p1 = originPosition
-    local p2 = destinationPosition
-    local selfDir = vecDirection(
-        newVec(p1.x, 0, p1.z),
-        newVec(p2.x, 0, p2.z)
-    )
-    local objectPos2d = newVec(
-        pos2.x, 0, pos2.z
-    )
-    local p3 = searchingPosition
-    local selfPosition2d = newVec(
-        p3.x, 0, p3.z
-    )
-    
-    if not disableDirCheck then
-        local dirToObject = vecNormalize(vecDirection(selfPosition2d, objectPos2d))
-
-        if selfDir.x ~= 0 then
-            if dirToObject.x ~= selfDir.x then return false end
-        else
-            if dirToObject.z ~= selfDir.z then return false end
-        end
-    end
     return vecDistance(pos1, pos2) < 0.249
 
 
@@ -214,9 +183,9 @@ local function resolveBeltEntity(self, object, searchingPosition, originPosition
                ]]
 end
 
-function beltItem:findRoom(searchingPosition, radius, originPosition, destinationPosition, disableDirCheck)
+function beltItem:findRoom(searchingPosition, radius)
     for _,gottenObject in ipairs(objectsInRadius(searchingPosition, radius)) do
-        if resolveBeltEntity(self, gottenObject, searchingPosition, originPosition, destinationPosition, disableDirCheck) then
+        if resolveBeltEntity(self, gottenObject, searchingPosition) then
             return false
         end
     end
@@ -274,8 +243,8 @@ function beltItem:movement(object, delta)
         return
     end
 
-    object:move_to(newPosition, false)
-    -- object:set_pos(newPosition)
+    -- object:move_to(newPosition, false)
+    object:set_pos(newPosition)
 end
 
 function beltItem:setMovementProgress(movementProgress)
@@ -363,7 +332,6 @@ function beltItem:updatePosition(pos, initialPlacement)
     local storageMovementProgress
     local laneStorage = self.lane
     local turning = false
-    local disableDirCheck = false
     local doBeltSwitch = false
 
     ::TryAgain::
@@ -427,7 +395,8 @@ function beltItem:updatePosition(pos, initialPlacement)
             doLanePositionCalculation = true
             if not newLane then return false end
             laneStorage = newLane
-            disableDirCheck = true
+
+            
         end
 
         local vectorDirection = fourDirToDir(nodeDirection)
@@ -517,8 +486,6 @@ function beltItem:updatePosition(pos, initialPlacement)
         end
 
         turning = true
-
-        disableDirCheck = true
         
     elseif switchBeltSwitch:match(nodeName) then
 
@@ -580,8 +547,6 @@ function beltItem:updatePosition(pos, initialPlacement)
             storageNextIntegerPosition = vecAdd(storageNextIntegerPosition, lanePositionModifier)
             storageOriginPosition      = vecAdd(storageOriginPosition, lanePositionModifier)
             storageDestinationPosition = vecAdd(storageDestinationPosition, lanePositionModifier)
-
-            disableDirCheck = true
         end
 
 
@@ -593,8 +558,10 @@ function beltItem:updatePosition(pos, initialPlacement)
     end
 
     local newPosition = vecLerp(storageOriginPosition, storageDestinationPosition, storageMovementProgress)
+
+    debugParticle(newPosition)
     
-    if not self:findRoom(newPosition, 0.4, storageOriginPosition, storageDestinationPosition, disableDirCheck) and not initialPlacement then
+    if not self:findRoom(newPosition, 0.4) and not initialPlacement then
         -- A belt switch failed, rebuild the node name and try to send it straight through
         if doBeltSwitch then
             nodeName = buildString(
@@ -632,6 +599,10 @@ end
 
 
 function beltItem:on_step(delta)
+    if self.warmUpTimer > 0 then
+        self.warmUpTimer = self.warmUpTimer - delta
+        return
+    end
     local object = self.object
     self:movement(object, delta)
 end
@@ -657,6 +628,7 @@ function beltItem:on_activate(staticData)
     --! Reloading
     if dataTable then
         gotStaticData(self, dataTable)
+        self.warmUpTimer = 5
     end
 end
 
