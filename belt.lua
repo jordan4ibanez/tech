@@ -17,6 +17,8 @@ local entityFloor          = customTools.entityFloor
 local extractName          = customTools.extractName
 local extractDirection     = customTools.extractDirection
 local ternary              = customTools.ternary
+local getBuildablePosition = customTools.getBuildablePosition
+local isBuildable          = customTools.isBuildable
 
 -- Minetest functions
 local registerNode         = minetest.register_node
@@ -154,12 +156,13 @@ if side == "left" then
     )
 
     function definition:after_place_node(placer, _, pointedThing)
+
         local lookDir = placer:get_look_dir()
         local fourDir = convertDir(dirToFourDir(lookDir))
         write(dirToFourDir(lookDir))
 
         -- Left is where you're placing, it always places second node to the right
-        local left = pointedThing.above
+        local left = self
         
         -- Turn it to the right
         local dir = fourDirToDir(fourDir)
@@ -168,7 +171,7 @@ if side == "left" then
         dir = yawToDir(yaw)
         local right = vecAdd(left, dir)
 
-        if getNode(left).name ~= switchNameString or getNode(right).name ~= "air" then
+        if getNode(left).name ~= switchNameString or not isBuildable(right) then
             removeNode(left)
             addItem(left, switchNameString)
             return
