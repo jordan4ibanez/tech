@@ -110,18 +110,23 @@ end
 
 switchBelts[switchNameString] = true
 
-local laneSwitchFormSpec = buildString(
-    "formspec_version[6]",
-    "size[10.5,16]",
-    "checkbox[2.1,2.6;filterItems;Item Filter;false]",
-    "list[context;filter;5.5,1.6;3,2;0]",
-    "label[3.4,0.9;Belt Switch Configuration]",
-    "checkbox[2.1,5;filterCookable;Filter All Cookable;false]",
-    "checkbox[2.1,7.2;filterFuel;Filter All Fuel;false]",
-    "list[current_player;main;0.4,9.25;8,1;]",
-    "list[current_player;main;0.4,10.5;8,3;8]",
-    "button[7.8,4.1;2.2,0.8;clear;Clear]"
-)
+local function laneSwitchFormSpec(filterItems, filterCookable, filterFuel)
+    filterItems = filterItems or false
+    filterCookable = filterCookable or false
+    filterFuel = filterFuel or false
+    return buildString(
+        "formspec_version[6]",
+        "size[10.5,16]",
+        "checkbox[2.1,2.6;filterItems;Item Filter;", filterItems, "]",
+        "list[context;filter;5.5,1.6;3,2;0]",
+        "label[3.4,0.9;Belt Switch Configuration]",
+        "checkbox[2.1,5;filterCookable;Filter All Cookable;", filterCookable, "]",
+        "checkbox[2.1,7.2;filterFuel;Filter All Fuel;", filterFuel, "]",
+        "list[current_player;main;0.4,9.25;8,1;]",
+        "list[current_player;main;0.4,10.5;8,3;8]",
+        "button[7.8,4.1;2.2,0.8;clear;Clear]"
+    )
+end
 
 
 local definition = {
@@ -175,7 +180,7 @@ if side == "left" then
         meta:set_int("filterItems", 0)
         meta:set_int("filterCookable", 0)
         meta:set_int("filterFuel", 0)
-        meta:set_string("formspec", laneSwitchFormSpec)
+        meta:set_string("formspec", laneSwitchFormSpec())
     end
 
     function definition:on_receive_fields(_, fields)
@@ -190,6 +195,12 @@ if side == "left" then
         for key,value in pairs(fields) do
             meta:set_int(key, ternary(value == "true", 1, 0))
         end
+
+        local filterItems    = meta:get_int("filterItems")    == 1
+        local filterCookable = meta:get_int("filterCookable") == 1
+        local filterFuel     = meta:get_int("filterFuel")     == 1
+
+        meta:set_string("formspec", laneSwitchFormSpec(filterItems, filterCookable, filterFuel))
 
     end
 
