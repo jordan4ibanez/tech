@@ -371,27 +371,68 @@ local function searchInput(self)
         local internalDirection = vecDirection(self.position, self.input)
         local positionAdjustment = vecMultiply(internalDirection, 0.25)
         local lanePosition = vecSubtract(self.input, positionAdjustment)
+        local objectList = objectsInRadius(lanePosition, 0.5)
+        if not objectList then return false end
+        if #objectList <= 0 then return false end
 
-        --! This causes a bug where the inserter passing the item onto the belt's neighbor can grab it instantly
-        local gottenObject = objectsInRadius(lanePosition, 0.5)
-        if not gottenObject then return false end
-        if #gottenObject <= 0 then return false end
-        gottenObject = gottenObject[1]
-        local gottenEntity = gottenObject:get_luaentity()
-        if not gottenEntity then return false end
-        if not gottenEntity.name then return false end
-        if gottenEntity.name ~= "tech:beltItem" then return false end
-        local itemString = gottenEntity.itemString
+        local xScalar = 0.5
+        local zScalar = 0.5
+        local yScalar = 0.5
 
-        if not itemString then return end
+        if internalDirection.x ~= 0 then
+            xScalar = 0.249
+        else
+            zScalar = 0.249
+        end
 
-        self.holding = itemString
-        self:updateVisual(self.holding)
-        self:setAnimation("reachForward")
-        
-        gottenObject:remove()
+        for _,thisObject in ipairs(objectList) do
 
-        return true
+            local function scanObject()
+                local gottenEntity = thisObject:get_luaentity()
+                if not gottenEntity then return false end
+                if not gottenEntity.name then return false end
+                if gottenEntity.name ~= "tech:beltItem" then return false end
+                
+                local pos1 = lanePosition
+                local pos2 = thisObject:get_pos()
+
+                local minX1 = pos1.x - xScalar
+                local maxX1 = pos1.x + xScalar
+                local minY1 = pos1.y - yScalar
+                local maxY1 = pos1.y + yScalar
+                local minZ1 = pos1.z - zScalar
+                local maxZ1 = pos1.z + zScalar
+
+                local maxX2 = pos2.x + xScalar
+                local minX2 = pos2.x - xScalar
+                local minY2 = pos2.y - yScalar
+                local maxY2 = pos2.y + yScalar
+                local minZ2 = pos2.z - zScalar
+                local maxZ2 = pos2.z + zScalar
+
+                -- Exclusion 2D collision detection
+                if (minX1 > maxX2 or maxX1 < minX2 or
+                    minZ1 > maxZ2 or maxZ1 < minZ2 or
+                    minY1 > maxY2 or maxY1 < minY2) then
+                        return false
+                end
+                local itemString = gottenEntity.itemString
+
+                if not itemString then return end
+
+                self.holding = itemString
+                self:updateVisual(self.holding)
+                self:setAnimation("reachForward")
+                
+                thisObject:remove()
+
+                return true
+            end
+
+            if scanObject() then return true end
+        end
+
+        return false
     end
 
     local possibleInventorySelections = examineInputInventories(nodeName)
