@@ -47,6 +47,7 @@ local vecLength            = vector.length
 local vecCopy              = vector.copy
 local vecEquals            = vector.equals
 local vecLerp              = vector.lerp
+local vecNormalize         = vector.normalize
 local serialize            = minetest.serialize
 local deserialize          = minetest.deserialize
 local objectsInRadius      = minetest.get_objects_inside_radius
@@ -144,27 +145,69 @@ local function getDirectionChangeLane(newRotation, currentRotation)
 end
 
 
-local function resolveBeltEntity(self, object)
+local function resolveBeltEntity(self, object, searchingPosition)
     if not object then return false end
     if isPlayer(object) then return false end
     object = object:get_luaentity()
     if not object then return false end
     if object == self then return false end
     if not object.name then return false end
-    if object.name == "tech:beltItem" then
-        local distance = vecDistance(self.object:get_pos(), object.object:get_pos())
-        -- This is a glitch due to stack operations, force pass it through
-        if distance == 0 then
-            -- write("Heisenbug has occured due to stack operations")
-            return false
-        end
-        return true
+    if object.name ~= "tech:beltItem" then return false end
+    
+    local pos1 = searchingPosition
+    local pos2 = object.object:get_pos()
+        
+    -- This is a glitch due to stack operations, force pass it through
+    --[[
+    if vecDistance(pos1, pos2) == 0 then
+        -- write("Heisenbug has occured due to stack operations")
+        return false
     end
+    ]]
+
+    local p1 = self.originPosition
+    local p2 = self.destinationPosition
+    local selfDir = vecDirection(
+        newVec(p1.x, 0, p1.z),
+        newVec(p2.x, 0, p2.z)
+    )
+    local objectPos2d = newVec(
+        pos2.x, 0, pos2.z
+    )
+    local p3 = self.object:get_pos()
+    local selfPosition2d = newVec(
+        p3.x, 0, p3.z
+    )
+    
+    local dirToObject = vecNormalize(vecDirection(selfPosition2d, objectPos2d))
+
+    if selfDir.x ~= 0 then
+        if dirToObject.x ~= selfDir.x then return false end
+    else
+        if dirToObject.z ~= selfDir.z then return false end
+    end
+
+    
+    local size = 0.249
+
+    local minX1 = pos1.x - size
+    local minX2 = pos2.x - size
+    local maxX1 = pos1.x + size
+    local maxX2 = pos2.x + size
+
+    local minZ1 = pos1.z - size
+    local minZ2 = pos2.z - size
+    local maxZ1 = pos1.z + size
+    local maxZ2 = pos2.z + size
+
+    -- Exclusion 2D collision detection
+    return not (minX1 > maxX2 or maxX1 < minX2 or
+               minZ1 > maxZ2 or maxZ1 < minZ2)
 end
 
 function beltItem:findRoom(searchingPosition, radius)
     for _,gottenObject in ipairs(objectsInRadius(searchingPosition, radius)) do
-        if resolveBeltEntity(self, gottenObject) then
+        if resolveBeltEntity(self, gottenObject, searchingPosition) then
             return false
         end
     end
@@ -217,7 +260,7 @@ function beltItem:movement(object, delta)
 
     local newPosition = vecLerp(self.originPosition, self.destinationPosition, self.movementProgress)
 
-    if not self:findRoom(newPosition, 0.25) then
+    if not self:findRoom(newPosition, 0.3) then
         self.movementProgress = oldProgress
         return
     end
@@ -362,7 +405,7 @@ function beltItem:updatePosition(pos, initialPlacement)
     elseif flatBeltSwitch:match(nodeName) then
 
         local doLanePositionCalculation = false
-
+        
         -- Going straight
         if initialPlacement or nodeDirection == oldNodeDirection then
             storageMovementProgress = 0
@@ -493,9 +536,9 @@ function beltItem:updatePosition(pos, initialPlacement)
         -- Next get the new switch direction
         yaw = originalYaw + (ternary(nodeName:find("left"), -1, 1) * (math.pi / 2))
         if nodeName:find("left") then
-            write("yep that's left")
+            -- write("yep that's left")
         else
-            write("yep that's to the right now")
+            -- write("yep that's to the right now")
         end
         local lanePositionModifier = yawToDir(yaw)
 
@@ -520,7 +563,7 @@ function beltItem:updatePosition(pos, initialPlacement)
     local newPosition = vecLerp(storageOriginPosition, storageDestinationPosition, storageMovementProgress)
 
     
-    if not self:findRoom(newPosition, 0.249) and not initialPlacement and not turning then
+    if not self:findRoom(newPosition, 0.35) and not initialPlacement then
         return false
     end
 
