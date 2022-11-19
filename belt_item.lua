@@ -145,7 +145,7 @@ local function getDirectionChangeLane(newRotation, currentRotation)
 end
 
 
-local function resolveBeltEntity(self, object, searchingPosition)
+local function resolveBeltEntity(self, object, searchingPosition, originPosition, destinationPosition)
     if not object then return false end
     if isPlayer(object) then return false end
     object = object:get_luaentity()
@@ -165,8 +165,8 @@ local function resolveBeltEntity(self, object, searchingPosition)
     end
     ]]
 
-    local p1 = self.originPosition
-    local p2 = self.destinationPosition
+    local p1 = originPosition
+    local p2 = destinationPosition
     local selfDir = vecDirection(
         newVec(p1.x, 0, p1.z),
         newVec(p2.x, 0, p2.z)
@@ -174,7 +174,7 @@ local function resolveBeltEntity(self, object, searchingPosition)
     local objectPos2d = newVec(
         pos2.x, 0, pos2.z
     )
-    local p3 = self.object:get_pos()
+    local p3 = searchingPosition
     local selfPosition2d = newVec(
         p3.x, 0, p3.z
     )
@@ -205,9 +205,9 @@ local function resolveBeltEntity(self, object, searchingPosition)
                minZ1 > maxZ2 or maxZ1 < minZ2)
 end
 
-function beltItem:findRoom(searchingPosition, radius)
+function beltItem:findRoom(searchingPosition, radius, originPosition, destinationPosition)
     for _,gottenObject in ipairs(objectsInRadius(searchingPosition, radius)) do
-        if resolveBeltEntity(self, gottenObject, searchingPosition) then
+        if resolveBeltEntity(self, gottenObject, searchingPosition, originPosition, destinationPosition) then
             return false
         end
     end
@@ -260,7 +260,7 @@ function beltItem:movement(object, delta)
 
     local newPosition = vecLerp(self.originPosition, self.destinationPosition, self.movementProgress)
 
-    if not self:findRoom(newPosition, 0.3) then
+    if not self:findRoom(newPosition, 0.3, self.originPosition, self.destinationPosition) then
         self.movementProgress = oldProgress
         return
     end
@@ -549,7 +549,6 @@ function beltItem:updatePosition(pos, initialPlacement)
         storageDestinationPosition = vecAdd(storageDestinationPosition, lanePositionModifier)
 
 
-
         -- debugParticle(vecAdd(storageOriginPosition, lanePositionModifier))
 
 
@@ -562,8 +561,9 @@ function beltItem:updatePosition(pos, initialPlacement)
 
     local newPosition = vecLerp(storageOriginPosition, storageDestinationPosition, storageMovementProgress)
 
+    debugParticle(newPosition)
     
-    if not self:findRoom(newPosition, 0.35) and not initialPlacement then
+    if not self:findRoom(newPosition, 0.35, storageOriginPosition, storageDestinationPosition) and not initialPlacement then
         return false
     end
 
