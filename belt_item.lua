@@ -358,6 +358,9 @@ function beltItem:updatePosition(pos, initialPlacement)
     local laneStorage = self.lane
     local turning = false
     local disableDirCheck = false
+    local doBeltSwitch = false
+
+    ::TryAgain::
 
     if beltAngle == 45 then
         local vectorDirection = fourDirToDir(nodeDirection)
@@ -538,7 +541,7 @@ function beltItem:updatePosition(pos, initialPlacement)
         storageDestinationPosition = vecAdd(destinationPosition, laneDirection)
         storageMovementProgress = 0
 
-        --! Filter check goes here!
+        --* Filter check
         local currentSwitchSide = ternary(nodeName:find("left"), -1, 1)
         local metaCheckPosition = integerPosition
 
@@ -548,7 +551,7 @@ function beltItem:updatePosition(pos, initialPlacement)
             metaCheckPosition = vecAdd(metaCheckPosition, checkDirection)
         end
 
-        local doBeltSwitch = true
+        doBeltSwitch = true
 
         local meta = getMeta(metaCheckPosition)
         if meta:get_int("filterItems") == 1 then
@@ -583,6 +586,15 @@ function beltItem:updatePosition(pos, initialPlacement)
     local newPosition = vecLerp(storageOriginPosition, storageDestinationPosition, storageMovementProgress)
     
     if not self:findRoom(newPosition, 0.35, storageOriginPosition, storageDestinationPosition, disableDirCheck) and not initialPlacement then
+        -- A belt switch failed, rebuild the node name and try to send it straight through
+        if doBeltSwitch then
+            nodeName = buildString(
+                "tech:belt_0_", beltSpeed
+            )
+            doBeltSwitch = false
+
+            goto TryAgain
+        end
         return false
     end
 
