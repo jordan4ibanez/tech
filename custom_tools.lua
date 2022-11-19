@@ -1,5 +1,9 @@
-local newVec = vector.new
-local abs    = math.abs
+local vecNew   = vector.new
+local vecZero  = vector.zero
+local vecFloor = vector.floor
+local vecAdd   = vector.add
+
+local abs     = math.abs
 
 -- This is a translation attempt out of D but done really badly - now yoinked from luatic
 
@@ -148,12 +152,12 @@ end
 
 -- Table of possible dirs
 local facedir_to_dir = {
-	vector.new( 0,  0,  1),
-	vector.new( 1,  0,  0),
-	vector.new( 0,  0, -1),
-	vector.new(-1,  0,  0),
-	vector.new( 0, -1,  0),
-	vector.new( 0,  1,  0),
+	vecNew( 0,  0,  1),
+	vecNew( 1,  0,  0),
+	vecNew( 0,  0, -1),
+	vecNew(-1,  0,  0),
+	vecNew( 0, -1,  0),
+	vecNew( 0,  1,  0),
 }
 -- Mapping from facedir value to index in facedir_to_dir.
 local facedir_to_dir_map = {
@@ -176,18 +180,18 @@ local function convertDir(inputDir)
 end
 
 local function vec2(x,y)
-    return newVec(x,y,0)
+    return vecNew(x,y,0)
 end
 
 -- Give the vector a correct-er position to floor
-local positionAdjustment = immutable(vector.new(0.5,0.5,0.5))
+local positionAdjustment = immutable(vecNew(0.5,0.5,0.5))
 
 local function adjustFloor(inputVec)
-    return vector.add(inputVec, positionAdjustment)
+    return vecAdd(inputVec, positionAdjustment)
 end
 
 local function entityFloor(object)
-    return vector.floor(adjustFloor(object:get_pos()))
+    return vecFloor(adjustFloor(object:get_pos()))
 end
 
 -- Very lazy functions
@@ -200,7 +204,7 @@ local function extractDirection(nodeIdentity)
 end
 
 -- We've hit the bottom of the barrel with this one
-local noMovement = vector.zero()
+local noMovement = vecZero()
 local function debugParticle(position)
     minetest.add_particle({
         pos = position,
@@ -229,7 +233,7 @@ end
 local fma = math.fma
 --* Interpolation amount is a value in range of 0.0 to 1.0
 function vector.lerp(vectorOrigin, vectorDestination, interpolationAmount)
-    return newVec(
+    return vecNew(
         fma(vectorDestination.x - vectorOrigin.x, interpolationAmount, vectorOrigin.x),
         fma(vectorDestination.y - vectorOrigin.y, interpolationAmount, vectorOrigin.y),
         fma(vectorDestination.z - vectorOrigin.z, interpolationAmount, vectorOrigin.z)
