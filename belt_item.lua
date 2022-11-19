@@ -604,7 +604,7 @@ function beltItem:on_step(delta)
         return
     end
     local object = self.object
-    self:movement(object, delta)
+    self:movement(object)
 end
 
 
