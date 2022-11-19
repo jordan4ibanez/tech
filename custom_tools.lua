@@ -1,9 +1,11 @@
-local vecNew   = vector.new
-local vecZero  = vector.zero
-local vecFloor = vector.floor
-local vecAdd   = vector.add
+local vecNew      = vector.new
+local vecZero     = vector.zero
+local vecFloor    = vector.floor
+local vecAdd      = vector.add
 
-local abs     = math.abs
+local addParticle = minetest.add_particle
+
+local abs         = math.abs
 
 -- This is a translation attempt out of D but done really badly - now yoinked from luatic
 
@@ -206,7 +208,7 @@ end
 -- We've hit the bottom of the barrel with this one
 local noMovement = vecZero()
 local function debugParticle(position)
-    minetest.add_particle({
+    addParticle({
         pos = position,
         velocity = noMovement,
         acceleration = noMovement,
@@ -221,9 +223,8 @@ end
 local function ternary(case, option1, option2)
     if case then
         return option1
-    else
-        return option2
     end
+    return option2
 end
 
 -- I'm actually surprised these two functions are missing from both LuaJIT and Minetest
