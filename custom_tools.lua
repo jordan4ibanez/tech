@@ -1,4 +1,5 @@
 local newVec = vector.new
+local abs    = math.abs
 
 -- This is a translation attempt out of D but done really badly - now yoinked from luatic
 
@@ -137,7 +138,7 @@ end
 
 -- This is pulled from master branch - Modified because I felt like it - This is optimized by Luatic
 local function dirToFourDir(dir)
-    if math.abs(dir.x) > math.abs(dir.z) then
+    if abs(dir.x) > abs(dir.z) then
         if dir.x < 0 then return 3 end
         return 1
     end
