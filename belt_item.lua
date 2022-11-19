@@ -35,6 +35,7 @@ local registeredItems      = minetest.registered_items --? Why are these two dif
 local registeredCraftItems = minetest.registered_craftitems
 local dirToYaw             = minetest.dir_to_yaw
 local yawToDir             = minetest.yaw_to_dir
+local getCraftResult       = minetest.get_craft_result
 local newVec               = vector.new
 local vecZero              = vector.zero
 local vecMultiply          = vector.multiply
@@ -514,10 +515,6 @@ function beltItem:updatePosition(pos, initialPlacement)
         -- Switches are extremely rigid
         if nodeDirection ~= oldNodeDirection then return false end
 
-
-        --! Filter check goes here!
-        
-
         -- First do the flat belt calculation
         local vectorDirection = fourDirToDir(nodeDirection)
         -- Due to how this was set up, this is inverted
@@ -526,6 +523,7 @@ function beltItem:updatePosition(pos, initialPlacement)
         -- Set the rigid inline positions - They are on the center of the node
         local originPosition      = vecAdd(integerPosition, inverseDirection)
         local destinationPosition = vecAdd(integerPosition, direction)
+
         -- The lane is 90 degrees adjacent to the direction
         local directionModifier = ternary(laneStorage == 1, 1, -1) * (math.pi / 2)
         local yaw = dirToYaw(direction)
@@ -540,22 +538,39 @@ function beltItem:updatePosition(pos, initialPlacement)
         storageDestinationPosition = vecAdd(destinationPosition, laneDirection)
         storageMovementProgress = 0
 
-        -- Next get the new switch direction
-        yaw = originalYaw + (ternary(nodeName:find("left"), -1, 1) * (math.pi / 2))
+        --! Filter check goes here!
+        local currentSwitchSide = ternary(nodeName:find("left"), -1, 1)
+        local metaCheckPosition = integerPosition
 
+        if currentSwitchSide == 1 then
+            local checkYaw = originalYaw + (currentSwitchSide * (math.pi / 2))
+            local checkDirection = yawToDir(checkYaw)
+            metaCheckPosition = vecAdd(metaCheckPosition, checkDirection)
+        end
 
-        local lanePositionModifier = vecRound(yawToDir(yaw))
+        local doBeltSwitch = true
 
-        -- Finally, everything is pushed in that direction
-        storageIntegerPosition     = vecAdd(storageIntegerPosition, lanePositionModifier)
-        storageNextIntegerPosition = vecAdd(storageNextIntegerPosition, lanePositionModifier)
-        storageOriginPosition      = vecAdd(storageOriginPosition, lanePositionModifier)
-        storageDestinationPosition = vecAdd(storageDestinationPosition, lanePositionModifier)
+        local meta = getMeta(metaCheckPosition)
+        if meta:get_int("filterItems") == 1 then
+            doBeltSwitch = meta:get_inventory():contains_item("filter", self.itemString)
+        elseif meta:get_int("filterCookable") == 1 then
+            doBeltSwitch = getCraftResult({method = "cooking", width = 1, items = {self.itemString}}).time ~= 0
+        elseif meta:get_int("filterFuel") == 1 then
+            doBeltSwitch = getCraftResult({method="fuel", width=1, items={self.itemString}}).time ~= 0
+        end
+        
+        if doBeltSwitch then
+            -- Next get the new switch direction
+            yaw = originalYaw + (currentSwitchSide * (math.pi / 2))
+            local lanePositionModifier = vecRound(yawToDir(yaw))
+            -- Finally, everything is pushed in that direction
+            storageIntegerPosition     = vecAdd(storageIntegerPosition, lanePositionModifier)
+            storageNextIntegerPosition = vecAdd(storageNextIntegerPosition, lanePositionModifier)
+            storageOriginPosition      = vecAdd(storageOriginPosition, lanePositionModifier)
+            storageDestinationPosition = vecAdd(storageDestinationPosition, lanePositionModifier)
 
-
-        -- debugParticle(vecAdd(storageOriginPosition, lanePositionModifier))
-
-        disableDirCheck = true
+            disableDirCheck = true
+        end
 
 
 
@@ -566,8 +581,6 @@ function beltItem:updatePosition(pos, initialPlacement)
     end
 
     local newPosition = vecLerp(storageOriginPosition, storageDestinationPosition, storageMovementProgress)
-
-    debugParticle(newPosition)
     
     if not self:findRoom(newPosition, 0.35, storageOriginPosition, storageDestinationPosition, disableDirCheck) and not initialPlacement then
         return false
