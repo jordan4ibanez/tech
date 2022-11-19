@@ -245,9 +245,9 @@ end
 
 local function getBuildablePosition(pointedThing)
     local under = registeredNodes[getNode(pointedThing.under).name].buildable_to
-    if under then return pointedThing.under end
+    if under then return pointedThing.under, true end
     local above = registeredNodes[getNode(pointedThing.above).name].buildable_to
-    if above then return pointedThing.above end
+    if above then return pointedThing.above, false end
     return false
 end
 
