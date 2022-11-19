@@ -47,6 +47,8 @@ local playSound            = minetest.sound_play
 -- Lua functions
 local floor                = math.floor
 local ceil                 = math.ceil
+local PI                   = math.pi
+local HALF_PI              = PI / 2
 
 -- Functions pulled out of thin air ~spooky~
 local flatBelts            = grabFlatBelts()
@@ -195,8 +197,6 @@ local function shortCutActivateAnimation(stage)
 end
 
 --! No idea how to fix the rotation in blender
-
-local rotationFix = newVec(math.pi / 2, 0, 0)
 
 local inserterSize = 0.7
 local inserter = {
@@ -537,7 +537,7 @@ local function searchOutput(self)
         if not beltEntity then return false end
 
         if internalDirection.z ~= 0 then
-            beltEntity:set_yaw(math.pi / 2)
+            beltEntity:set_yaw(HALF_PI)
         end
         
         beltEntity = beltEntity:get_luaentity()
@@ -748,7 +748,7 @@ local function adjustPlacement(inputPosition)
 end
 
 local function convertFourDirToYaw(inputDirection)
-    return (math.pi / 2.0) * -(inputDirection + 1)
+    return (HALF_PI) * -(inputDirection + 1)
 end
 
 
@@ -763,7 +763,7 @@ function inserterItem:on_place(placer, pointedThing)
     if inserterObject then
         inserterObject:set_rotation(
             newVec(
-                math.pi / 2,
+                HALF_PI,
                 yaw,
                 0
             )
