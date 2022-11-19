@@ -17,11 +17,13 @@ local extractName          = customTools.extractName
 local extractDirection     = customTools.extractDirection
 local debugParticle        = customTools.debugParticle
 local ternary              = customTools.ternary
+local getBuildablePosition = customTools.getBuildablePosition
 
 -- Minetest functions
 local registerNode         = minetest.register_node
 local getNode              = minetest.get_node
 local getMeta              = minetest.get_meta
+local removeNode           = minetest.remove_node
 local setNode              = minetest.set_node
 local onLoaded             = minetest.register_on_mods_loaded
 local addEntity            = minetest.add_entity
@@ -751,14 +753,18 @@ local function convertFourDirToYaw(inputDirection)
     return (HALF_PI) * -(inputDirection + 1)
 end
 
-
 function inserterItem:on_place(placer, pointedThing)
     local lookDir = placer:get_look_dir()
     local fourDir = dirToFourDir(lookDir)
     local yaw     = convertFourDirToYaw(fourDir)
-    local above   = pointedThing.above
 
-    local inserterObject = addEntity(adjustPlacement(above), buildString("tech:inserter_", tier))
+    local pos, replaced  = getBuildablePosition(pointedThing)
+
+    if not pos then return end
+
+    if replaced then removeNode(pos) end
+
+    local inserterObject = addEntity(adjustPlacement(pos), buildString("tech:inserter_", tier))
 
     if inserterObject then
         inserterObject:set_rotation(
@@ -771,10 +777,10 @@ function inserterItem:on_place(placer, pointedThing)
 
         local frontDirection = fourDirToDir(fourDir)
 
-        above.y = ceil(above.y)
+        pos.y = ceil(pos.y)
 
-        local front = vecAdd(frontDirection, above)
-        local back  = vecAdd(vecMultiply(frontDirection, -1), above)
+        local front = vecAdd(frontDirection, pos)
+        local back  = vecAdd(vecMultiply(frontDirection, -1), pos)
 
         local entity = inserterObject:get_luaentity()
         entity.input  = back
