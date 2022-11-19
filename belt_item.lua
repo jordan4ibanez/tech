@@ -192,7 +192,7 @@ function beltItem:findRoom(searchingPosition, radius)
     return true
 end
 
-function beltItem:movement(object, delta)
+function beltItem:movement(object)
 
     -- Initial scan the belt is is on
     if not beltSwitch:match(getNode(self.integerPosition).name) then
