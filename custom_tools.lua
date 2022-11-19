@@ -251,7 +251,9 @@ local function getBuildablePosition(pointedThing)
     return false
 end
 
-
+local function isBuildable(position)
+    return registeredNodes[getNode(position).name].buildable_to
+end
 
 -- There are two ways to do this: _, _, _ or {_, _, _}. I like the second one better
 return {
@@ -272,5 +274,6 @@ return {
     extractDirection = extractDirection,
     debugParticle    = debugParticle,
     ternary          = ternary,
-    getBuildablePosition = getBuildablePosition
+    getBuildablePosition = getBuildablePosition,
+    isBuildable      = isBuildable
 }
