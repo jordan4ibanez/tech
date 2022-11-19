@@ -191,9 +191,7 @@ local function resolveBeltEntity(self, object, searchingPosition, originPosition
             if dirToObject.z ~= selfDir.z then return false end
         end
     end
-
-    
-    return vecDistance(pos1, pos2) < 0.3
+    return vecDistance(pos1, pos2) < 0.249
 
 
     --[[
@@ -271,7 +269,7 @@ function beltItem:movement(object, delta)
 
     local newPosition = vecLerp(self.originPosition, self.destinationPosition, self.movementProgress)
 
-    if not self:findRoom(newPosition, 0.3, self.originPosition, self.destinationPosition) then
+    if not self:findRoom(newPosition, 0.4, self.originPosition, self.destinationPosition) then
         self.movementProgress = oldProgress
         return
     end
@@ -429,6 +427,7 @@ function beltItem:updatePosition(pos, initialPlacement)
             doLanePositionCalculation = true
             if not newLane then return false end
             laneStorage = newLane
+            disableDirCheck = true
         end
 
         local vectorDirection = fourDirToDir(nodeDirection)
@@ -472,8 +471,6 @@ function beltItem:updatePosition(pos, initialPlacement)
             end
 
             turning = true
-
-            disableDirCheck = true
         end
     elseif turnBeltSwitch:match(nodeName) then
 
@@ -597,7 +594,7 @@ function beltItem:updatePosition(pos, initialPlacement)
 
     local newPosition = vecLerp(storageOriginPosition, storageDestinationPosition, storageMovementProgress)
     
-    if not self:findRoom(newPosition, 0.35, storageOriginPosition, storageDestinationPosition, disableDirCheck) and not initialPlacement then
+    if not self:findRoom(newPosition, 0.4, storageOriginPosition, storageDestinationPosition, disableDirCheck) and not initialPlacement then
         -- A belt switch failed, rebuild the node name and try to send it straight through
         if doBeltSwitch then
             nodeName = buildString(
