@@ -57,6 +57,8 @@ local isPlayer             = minetest.is_player
 -- Lua functions
 local floor = math.floor
 local abs   = math.abs
+local PI    = math.pi
+local HALF_PI = PI / 2
 
 -- Functions pulled out of thin air ~spooky~
 local beltSwitch = grabBeltSwitch()
@@ -191,6 +193,11 @@ local function resolveBeltEntity(self, object, searchingPosition, originPosition
     end
 
     
+    return vecDistance(pos1, pos2) < 0.3
+
+
+    --[[
+        --! This causes extreme problems, never re-enable it
     local size = 0.249
 
     local minX1 = pos1.x - size
@@ -206,6 +213,7 @@ local function resolveBeltEntity(self, object, searchingPosition, originPosition
     -- Exclusion 2D collision detection
     return not (minX1 > maxX2 or maxX1 < minX2 or
                minZ1 > maxZ2 or maxZ1 < minZ2)
+               ]]
 end
 
 function beltItem:findRoom(searchingPosition, radius, originPosition, destinationPosition, disableDirCheck)
@@ -375,7 +383,7 @@ function beltItem:updatePosition(pos, initialPlacement)
         destinationPosition.y = destinationPosition.y + 1
 
         -- The lane is 90 degrees adjacent to the direction
-        local directionModifier = ternary(laneStorage == 1, 1, -1) * (math.pi / 2)
+        local directionModifier = ternary(laneStorage == 1, 1, -1) * (HALF_PI)
         local yaw = dirToYaw(direction) + directionModifier
         local laneDirection = vecMultiply(vecRound(yawToDir(yaw)), 0.25)
 
@@ -399,7 +407,7 @@ function beltItem:updatePosition(pos, initialPlacement)
         originPosition.y = originPosition.y + 1
 
         -- The lane is 90 degrees adjacent to the direction
-        local directionModifier = ternary(laneStorage == 1, 1, -1) * (math.pi / 2)
+        local directionModifier = ternary(laneStorage == 1, 1, -1) * (HALF_PI)
         local yaw = dirToYaw(direction) + directionModifier
         local laneDirection = vecMultiply(vecRound(yawToDir(yaw)), 0.25)
 
@@ -431,7 +439,7 @@ function beltItem:updatePosition(pos, initialPlacement)
         local originPosition      = vecAdd(integerPosition, inverseDirection)
         local destinationPosition = vecAdd(integerPosition, direction)
         -- The lane is 90 degrees adjacent to the direction
-        local directionModifier = ternary(laneStorage == 1, 1, -1) * (math.pi / 2)
+        local directionModifier = ternary(laneStorage == 1, 1, -1) * (HALF_PI)
         local yaw = dirToYaw(direction) + directionModifier
         local laneDirection = vecMultiply(vecRound(yawToDir(yaw)), 0.25)
 
@@ -478,7 +486,7 @@ function beltItem:updatePosition(pos, initialPlacement)
         local originPosition      = vecAdd(integerPosition, inverseDirection)
         local destinationPosition = vecAdd(integerPosition, direction)
         -- The lane is 90 degrees adjacent to the direction
-        local directionModifier = ternary(laneStorage == 1, 1, -1) * (math.pi / 2)
+        local directionModifier = ternary(laneStorage == 1, 1, -1) * (HALF_PI)
         local yaw = dirToYaw(direction) + directionModifier
         local laneDirection = vecMultiply(vecRound(yawToDir(yaw)), 0.25)
 
@@ -528,7 +536,7 @@ function beltItem:updatePosition(pos, initialPlacement)
         local destinationPosition = vecAdd(integerPosition, direction)
 
         -- The lane is 90 degrees adjacent to the direction
-        local directionModifier = ternary(laneStorage == 1, 1, -1) * (math.pi / 2)
+        local directionModifier = ternary(laneStorage == 1, 1, -1) * (HALF_PI)
         local yaw = dirToYaw(direction)
         local originalYaw = yaw
         yaw = yaw + directionModifier
@@ -546,7 +554,7 @@ function beltItem:updatePosition(pos, initialPlacement)
         local metaCheckPosition = integerPosition
 
         if currentSwitchSide == 1 then
-            local checkYaw = originalYaw + (currentSwitchSide * (math.pi / 2))
+            local checkYaw = originalYaw + (currentSwitchSide * (HALF_PI))
             local checkDirection = yawToDir(checkYaw)
             metaCheckPosition = vecAdd(metaCheckPosition, checkDirection)
         end
@@ -564,7 +572,7 @@ function beltItem:updatePosition(pos, initialPlacement)
         
         if doBeltSwitch then
             -- Next get the new switch direction
-            yaw = originalYaw + (currentSwitchSide * (math.pi / 2))
+            yaw = originalYaw + (currentSwitchSide * (HALF_PI))
             local lanePositionModifier = vecRound(yawToDir(yaw))
             -- Finally, everything is pushed in that direction
             storageIntegerPosition     = vecAdd(storageIntegerPosition, lanePositionModifier)
@@ -613,7 +621,7 @@ function beltItem:updatePosition(pos, initialPlacement)
         if rotation ~= 0 then
             rotation = 0
         else
-            rotation = math.pi / 2
+            rotation = HALF_PI
         end
         object:set_yaw(rotation)
     end
