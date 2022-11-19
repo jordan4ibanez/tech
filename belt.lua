@@ -39,6 +39,10 @@ local vecZero              = vector.zero
 local vecMultiply          = vector.multiply
 local vecAdd               = vector.add
 
+-- Lua functions
+local PI = math.pi
+local HALF_PI = PI / 2
+
 
 --! No animation because that's not implemented into Minetest
 
@@ -160,7 +164,7 @@ if side == "left" then
         -- Turn it to the right
         local dir = fourDirToDir(fourDir)
         local yaw = dirToYaw(dir)
-        yaw = yaw + (math.pi / 2)
+        yaw = yaw + (HALF_PI)
         dir = yawToDir(yaw)
         local right = vecAdd(left, dir)
 
