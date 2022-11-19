@@ -1,11 +1,13 @@
-local vecNew      = vector.new
-local vecZero     = vector.zero
-local vecFloor    = vector.floor
-local vecAdd      = vector.add
+local vecNew          = vector.new
+local vecZero         = vector.zero
+local vecFloor        = vector.floor
+local vecAdd          = vector.add
 
-local addParticle = minetest.add_particle
+local addParticle     = minetest.add_particle
+local registeredNodes = minetest.registered_nodes
+local getNode         = minetest.get_node
 
-local abs         = math.abs
+local abs             = math.abs
 
 -- This is a translation attempt out of D but done really badly - now yoinked from luatic
 
@@ -241,6 +243,13 @@ function vector.lerp(vectorOrigin, vectorDestination, interpolationAmount)
     )
 end
 
+local function getBuildablePosition(pointedThing)
+    local under = registeredNodes[getNode(pointedThing.under).name].buildable_to
+    if under then return pointedThing.under end
+    local above = registeredNodes[getNode(pointedThing.above).name].buildable_to
+    if above then return pointedThing.above end
+    return false
+end
 
 
 
@@ -262,5 +271,6 @@ return {
     extractName      = extractName,
     extractDirection = extractDirection,
     debugParticle    = debugParticle,
-    ternary          = ternary
+    ternary          = ternary,
+    getBuildablePosition = getBuildablePosition
 }
