@@ -33,6 +33,9 @@ local vecZero              = vector.zero
 local vecMultiply          = vector.multiply
 local vecAdd               = vector.add
 
+-- Lua functions
+local floor = math.floor
+
 
 
 --! Must run after mods are loaded, entities are dynamic anyways
@@ -72,7 +75,7 @@ function InserterVisual:setItem(item)
 
     local itemname = stack:is_known() and stack:get_name() or "unknown"
     local def = registeredItems[itemname]
-    local glow = def and def.light_source and math.floor(def.light_source / 2 + 0.5)
+    local glow = def and def.light_source and floor(def.light_source / 2 + 0.5)
 
     self.object:set_properties({
         is_visible = true,
