@@ -357,7 +357,7 @@ local function searchInput(self)
     
     if isAir(nodeName) then
 
-        local gottenItemString = grabInputFromPosition(self.input, 0.5)
+        local gottenItemString = grabInputFromPosition(self.input, 1)
 
         if not gottenItemString then return false end
 
