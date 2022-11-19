@@ -145,7 +145,7 @@ local function getDirectionChangeLane(newRotation, currentRotation)
 end
 
 
-local function resolveBeltEntity(self, object, searchingPosition, originPosition, destinationPosition)
+local function resolveBeltEntity(self, object, searchingPosition, originPosition, destinationPosition, disableDirCheck)
     if not object then return false end
     if isPlayer(object) then return false end
     object = object:get_luaentity()
@@ -179,12 +179,14 @@ local function resolveBeltEntity(self, object, searchingPosition, originPosition
         p3.x, 0, p3.z
     )
     
-    local dirToObject = vecNormalize(vecDirection(selfPosition2d, objectPos2d))
+    if not disableDirCheck then
+        local dirToObject = vecNormalize(vecDirection(selfPosition2d, objectPos2d))
 
-    if selfDir.x ~= 0 then
-        if dirToObject.x ~= selfDir.x then return false end
-    else
-        if dirToObject.z ~= selfDir.z then return false end
+        if selfDir.x ~= 0 then
+            if dirToObject.x ~= selfDir.x then return false end
+        else
+            if dirToObject.z ~= selfDir.z then return false end
+        end
     end
 
     
@@ -205,9 +207,9 @@ local function resolveBeltEntity(self, object, searchingPosition, originPosition
                minZ1 > maxZ2 or maxZ1 < minZ2)
 end
 
-function beltItem:findRoom(searchingPosition, radius, originPosition, destinationPosition)
+function beltItem:findRoom(searchingPosition, radius, originPosition, destinationPosition, disableDirCheck)
     for _,gottenObject in ipairs(objectsInRadius(searchingPosition, radius)) do
-        if resolveBeltEntity(self, gottenObject, searchingPosition, originPosition, destinationPosition) then
+        if resolveBeltEntity(self, gottenObject, searchingPosition, originPosition, destinationPosition, disableDirCheck) then
             return false
         end
     end
@@ -354,6 +356,7 @@ function beltItem:updatePosition(pos, initialPlacement)
     local storageMovementProgress
     local laneStorage = self.lane
     local turning = false
+    local disableDirCheck = false
 
     if beltAngle == 45 then
         local vectorDirection = fourDirToDir(nodeDirection)
@@ -535,12 +538,17 @@ function beltItem:updatePosition(pos, initialPlacement)
 
         -- Next get the new switch direction
         yaw = originalYaw + (ternary(nodeName:find("left"), -1, 1) * (math.pi / 2))
+
+        write(yaw)
+
         if nodeName:find("left") then
             -- write("yep that's left")
         else
             -- write("yep that's to the right now")
         end
-        local lanePositionModifier = yawToDir(yaw)
+        local lanePositionModifier = vecRound(yawToDir(yaw))
+
+        write(dump(lanePositionModifier))
 
         -- Finally, everything is pushed in that direction
         storageIntegerPosition     = vecAdd(storageIntegerPosition, lanePositionModifier)
@@ -550,6 +558,8 @@ function beltItem:updatePosition(pos, initialPlacement)
 
 
         -- debugParticle(vecAdd(storageOriginPosition, lanePositionModifier))
+
+        disableDirCheck = true
 
 
 
@@ -563,7 +573,7 @@ function beltItem:updatePosition(pos, initialPlacement)
 
     debugParticle(newPosition)
     
-    if not self:findRoom(newPosition, 0.35, storageOriginPosition, storageDestinationPosition) and not initialPlacement then
+    if not self:findRoom(newPosition, 0.35, storageOriginPosition, storageDestinationPosition, disableDirCheck) and not initialPlacement then
         return false
     end
 
