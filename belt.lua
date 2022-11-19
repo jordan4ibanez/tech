@@ -20,6 +20,7 @@ local ternary              = customTools.ternary
 
 -- Minetest functions
 local registerNode         = minetest.register_node
+local removeNode           = minetest.remove_node
 local getNode              = minetest.get_node
 local getMeta              = minetest.get_meta
 local setNode              = minetest.set_node
@@ -109,6 +110,20 @@ end
 
 switchBelts[switchNameString] = true
 
+local laneSwitchFormSpec = buildString(
+    "formspec_version[6]",
+    "size[10.5,16]",
+    "checkbox[2.1,2.6;filterItems;Item Filter;false]",
+    "list[context;filter;5.5,1.6;3,2;0]",
+    "label[3.4,0.9;Belt Switch Configuration]",
+    "checkbox[2.1,5;filterCookable;Filter All Cookable;false]",
+    "checkbox[2.1,7.2;filterFuel;Filter All Fuel;false]",
+    "list[current_player;main;0.4,9.25;8,1;]",
+    "list[current_player;main;0.4,10.5;8,3;8]",
+    "button[7.8,4.1;2.2,0.8;clear;Clear]"
+)
+
+
 local definition = {
     paramtype  = "light",
     paramtype2 = "facedir",
@@ -142,17 +157,60 @@ if side == "left" then
         local yaw = dirToYaw(dir)
         yaw = yaw + (math.pi / 2)
         dir = yawToDir(yaw)
-
         local right = vecAdd(left, dir)
 
         if getNode(left).name ~= switchNameString or getNode(right).name ~= "air" then
-            write("delete above node and drop item")
+            removeNode(left)
+            addItem(left, switchNameString)
             return
         end
 
         setNode(left, {name = switchNameString, param2 = fourDir})
         setNode(right, {name = rightnameString, param2 = fourDir})
+
+        -- Left node controls the data
+        local meta = getMeta(left)
+        local inv = meta:get_inventory()
+        inv:set_size("filter", 6)
+        meta:set_int("filterItems", 0)
+        meta:set_int("filterCookable", 0)
+        meta:set_int("filterFuel", 0)
+        meta:set_string("formspec", laneSwitchFormSpec)
     end
+
+    function definition:on_receive_fields(formname, fields, sender)
+        local meta = getMeta(self)
+        if fields.clear then
+            local inv = meta:get_inventory()
+            for i = 1,6 do
+                inv:set_stack("filter", i, "")
+            end
+            return
+        end
+        for key,value in pairs(fields) do
+            meta:set_int(key, ternary(value == "true", 1, 0))
+        end
+
+    end
+
+    function definition:allow_metadata_inventory_move()
+        return 0
+    end
+
+    function definition:allow_metadata_inventory_put(listname, index, stack)
+        local inv = getMeta(self):get_inventory()
+        inv:set_stack(listname, index, stack:get_name())
+        return 0
+
+    end
+
+    function definition:allow_metadata_inventory_take(listname, index)
+        local inv = getMeta(self):get_inventory()
+        inv:set_stack(listname, index, "")
+        return 0
+    end
+else
+    
 end
 
 registerNode(
