@@ -178,7 +178,7 @@ if side == "left" then
         meta:set_string("formspec", laneSwitchFormSpec)
     end
 
-    function definition:on_receive_fields(formname, fields, sender)
+    function definition:on_receive_fields(_, fields)
         local meta = getMeta(self)
         if fields.clear then
             local inv = meta:get_inventory()
