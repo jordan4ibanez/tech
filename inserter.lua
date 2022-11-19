@@ -509,8 +509,7 @@ local function searchOutput(self)
     local nodeName     = extractName(nodeIdentity)
     local nodeRotation = extractDirection(nodeIdentity)
 
-    --! if it's a belt, do another function to search the belt position then return here
-
+    -- Search ground
     if isAir(nodeName) then
 
         addItem(outputPosition, self.holding)
@@ -521,9 +520,9 @@ local function searchOutput(self)
         self:setAnimation("reachBackward")
 
         return true
-
+        
+    -- Search belt
     elseif flatBelts:match(nodeName) then
-
         
         local internalDirection = vecDirection(self.position, self.output)
         local lane = getLane(internalDirection, nodeRotation)
@@ -557,6 +556,7 @@ local function searchOutput(self)
         return true
     end
 
+    -- Begin search for input countainer
     local possibleInventorySelections  = examineOutputInventories(nodeName)
 
     if not possibleInventorySelections then return false end
