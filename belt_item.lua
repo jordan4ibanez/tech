@@ -472,6 +472,8 @@ function beltItem:updatePosition(pos, initialPlacement)
             end
 
             turning = true
+
+            disableDirCheck = true
         end
     elseif turnBeltSwitch:match(nodeName) then
 
@@ -518,6 +520,8 @@ function beltItem:updatePosition(pos, initialPlacement)
         end
 
         turning = true
+
+        disableDirCheck = true
         
     elseif switchBeltSwitch:match(nodeName) then
 
