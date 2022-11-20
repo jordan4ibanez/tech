@@ -54,3 +54,10 @@ local objectsInRadius      = minetest.get_objects_inside_radius
 local isPlayer             = minetest.is_player
 local playSound            = minetest.sound_play
 local addParticleSpawner   = minetest.add_particlespawner
+formspec_version[6]
+size[12,18]
+list[context;stock;3.6,0.7;4,4;0]
+list[context;output;3.6,6.3;4,4;0]
+label[1.6,3.1;Stock]
+label[1.6,8.7;Output]
+list[current_player;main;1.1,12;8,4;0]
