@@ -76,13 +76,14 @@ end
 
 -- let the programmer actually use it during runtime for matching cases
 function switch:match(case, ...)
+    local caseTable = self.case_table
     -- only check against existing cases
-    if self.case_table[case] then
-        return self.case_table[case](...)
+    if caseTable[case] then
+        return caseTable[case](...)
     end
     -- There's your fancy D default
-    if self.case_table.default then
-        return self.case_table.default(...)
+    if caseTable.default then
+        return caseTable.default(...)
     end
     return nil
 end
