@@ -120,8 +120,9 @@ function simpleSwitch:new(case_table)
 end
 
 function simpleSwitch:match(case)
-    if self.case_table[case] then
-        return self.case_table[case]
+    local caseTable = self.case_table
+    if caseTable[case] then
+        return caseTable[case]
     end
     return nil
 end
