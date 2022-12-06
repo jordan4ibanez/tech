@@ -9,6 +9,8 @@ local getNode         = minetest.get_node
 
 local abs             = math.abs
 
+local concat          = table.concat
+
 -- This is a translation attempt out of D but done really badly - now yoinked from luatic
 
 local function write(...)
@@ -16,7 +18,7 @@ local function write(...)
     for i = 1, select("#", ...) do
         rope[i] = tostring(rope[i])
     end
-    print(table.concat(rope))
+    print(concat(rope))
 end
 
 -- Original code is here: https://stackoverflow.com/questions/47956954/read-only-iterable-table-in-lua
