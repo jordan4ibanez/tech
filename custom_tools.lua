@@ -8,8 +8,10 @@ local registeredNodes = minetest.registered_nodes
 local getNode         = minetest.get_node
 
 local abs             = math.abs
-
 local concat          = table.concat
+local ipairs          = ipairs
+local pairs           = pairs
+
 
 -- This is a translation attempt out of D but done really badly - now yoinked from luatic
 
